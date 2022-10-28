@@ -16,8 +16,7 @@
 #E-mail      : drtlof@gmail.com
 ###################################################################
 
-USER=$(whoami)
-CONFPATH="/home/$USER/.config/rclone-jobman"
+confPath="$HOME/.config/rclone-jobman"
 
 doBasicChecks(){
 # Check that some basic things are set correctly
@@ -65,10 +64,10 @@ printJobInfo(){
 setRcloneOptions(){
 # Set fixed options for Rclone
   # Set some file paths:
-  configFile="/home/$USER/.config/rclone/rclone.conf"
-  logFile="$CONFPATH/log/$jobBasename.log"
-  filterfromFile="$CONFPATH/filter-from/$jobBasename.filter"
-	lockFile="$CONFPATH/lock/$jobBasename.lock"
+  configFile="$HOME/.config/rclone/rclone.conf"
+  logFile="$confPath/log/$jobBasename.log"
+  filterfromFile="$confPath/filter-from/$jobBasename.filter"
+	lockFile="$confPath/lock/$jobBasename.lock"
 
   # Set rclone options:
   # --config: read config from $configFile.
@@ -127,12 +126,12 @@ menuItem(){
 buildMenu(){
 # Reads all the config files and calls menuItem() for each one to build the menu
   # Get all files in ./config, save as an array
-  listFiles=($(ls -d $CONFPATH/jobs/*))
+  listFiles=($(ls -d $confPath/jobs/*))
 
   echo "List of available jobs:"
   for i in ${!listFiles[@]}; do
     source ${listFiles[$i]}
-    logFile="$CONFPATH/log/$(basename ${listFiles[$i]}).log"
+    logFile="$confPath/log/$(basename ${listFiles[$i]}).log"
     menuItem
   done
   numFiles=$i
@@ -160,7 +159,7 @@ runMenu(){
 
 runFile(){
 # Check that file name from $1 exists and call doJob(). If not, exit with error.
-  jobFile="$CONFPATH/jobs/$1"
+  jobFile="$confPath/jobs/$1"
   if [ -f "$jobFile" ]; then
     doJob
   else
@@ -169,11 +168,13 @@ runFile(){
   fi
 }
 
-
+main(){
 # Check if some argument is passed and call runFile(). if not, call runMenu().
-if [ "$1" ]; then
-  runFile $1
-else
-  runMenu
-fi
+  if [ "$1" ]; then
+    runFile $1
+  else
+    runMenu
+  fi
+}
 
+main "${@}"

@@ -32,6 +32,4 @@ For every job run, the output from rclone will be saved in a log file in `.confi
 ## ToDo:
 
 - Rewrite using local variables
-- Replace /home/$USER with $HOME
-- Replace other $ALLCAPS variables with suitable $lowcaps names
 - Better documentation
