@@ -31,5 +31,4 @@ For every job run, the output from rclone will be saved in a log file in `.confi
 
 ## ToDo:
 
-- Rewrite using local variables
-- Better documentation
+- Write better documentation
