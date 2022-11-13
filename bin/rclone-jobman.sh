@@ -73,7 +73,7 @@ setRcloneOptions(){
 
   # Set some file paths:
   configFile=$(checkFile "$HOME/.config/rclone/rclone.conf") || exit 1
-  logFile="$confPath/log/$(basename $jobFile).log"
+  logFile="$confPath/log/$jobBasename.log"
   filterfromFile=$(checkFile "$confPath/filter-from/$jobBasename.filter") || exit 1
 
   # Set dryrun option
@@ -134,7 +134,7 @@ callRclone(){
   local logFile
   
 	lockFile="$confPath/lock/$jobBasename.lock"
-  logFile="$confPath/log/$(basename $jobFile).log"
+  logFile="$confPath/log/$jobBasename.log"
   
 	# Display notification
   DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Syncing $jobName"
