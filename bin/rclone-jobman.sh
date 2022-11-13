@@ -238,7 +238,7 @@ runFile(){
   local jobFile="$confPath/jobs/$1"
   
   if [ -f "$jobFile" ]; then
-    doJob
+    doJob $jobFile
   else
     echo "File $jobFile not found. Exiting."
     exit 1
