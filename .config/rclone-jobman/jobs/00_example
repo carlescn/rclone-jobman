@@ -1,8 +1,8 @@
 # Descriptive name for the sync job
 jobName="This job is an example"
 
-# For testing purposes, uncomment the following line to enable dry run: rclone will NOT write anything to the remote server.
-#dryrun=-n
+# For testing purposes, set to TRUE and rclone will NOT write anything to the remote server.
+dryrun=FALSE
 
 # Paths for source (READ) and destination (WRITE)
 sourcePath=/path/to/source
