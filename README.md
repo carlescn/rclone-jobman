@@ -1,9 +1,9 @@
 # rclone-jobman
 
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3.0-blue.svg)](https://github.com/carlescn/rclone-jobman/blob/main/LICENSE)
-[![Linux](https://img.shields.io/badge/OS-Linux-green.svg?logo=linux)](https://www.linux.org/)
 [![made-with-bash-5.1](https://img.shields.io/badge/Made%20with-Bash%205.1-1f425f.svg?logo=gnubash)](https://www.gnu.org/software/bash/)
-[![rclone-1.53.3](https://img.shields.io/badge/rclone-1.53.3-green.svg)](https://rclone.org/)
+[![Linux](https://img.shields.io/badge/OS-Linux-yellow.svg?logo=linux)](https://www.linux.org/)
+[![rclone-1.53.3](https://img.shields.io/badge/rclone-1.53.3-darkgreen.svg)](https://rclone.org/)
 
 
 This is a simple script I wrote to help me manage multiple sync jobs with [rclone](https://rclone.org/).
