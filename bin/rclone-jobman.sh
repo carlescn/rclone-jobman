@@ -1,248 +1,147 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###################################################################
 #Script Name : rclone-jobman.sh
-#Description : Simple sync job manager for rclone.
-#              If an argument is passed, it takes it as a file name
-#              and checks for it in ~/.config/rclone-jobman/jobs.
-#              Then runs the corresponding sync job.
-#              If no argument is passed, it looks for all the files
-#              in ~/.config/rclone-jobman/jobs and shows the time
-#              since the last time every one has run. Then lets you
-#              choose a job tu run and returns you to the menu.
-#              (PENDING DOCUMENTATION!).
-#Args        : Either nothing or the name of a job file
+#Description : Simple sync-job manager for rclone.
+#              If no argument is passed, it looks for all the files in ~/.config/rclone-jobman/jobs.
+#              Shows their names and the time since their where last run.
+#              Then lets you choose a job tu run. Once finished, it returns to the menu.
+#              It also accepts one file name as a parameter,
+#              which must exist in ~/.config/rclone-jobman/jobs.
+#              If so, it runs the corresponding job.
+#Args        : Either nothing or the name of a job file.
 #Author      : CarlesCN
 #E-mail      : drtlof@gmail.com
 ###################################################################
 
-# Exit the script if any command exits with anything other than 0
-set -e
+# -e script ends on error (exit != 0)
+# -u error if undefined variable
+# -o pipefail script ends if piped command fails
+set -euo pipefail
 
+readonly scriptName=$0
 readonly confPath="$HOME/.config/rclone-jobman"
 
-main(){
-# Check if some argument is passed and call runFile(). if not, call runMenu().
-  if [ "$1" ]; then
-    runFile $1
-  else
-    runMenu
-  fi
+# Intended usage:
+function usage() {
+    echo "Usage: $scriptName [ job_file ]"
 }
 
-
-readJobFileLine(){
-# Reads line that matches $1 from file $2 and returns the trailing part of the line after the character "="
-# If it matches an empty string, exits with 1.
-  local line
-  
-  line=$(grep $1 $2 | cut --fields=2 --delimiter="=")
-  
-  if [[ -z $line ]]; then
-    echo "\"$1=\" is missing in your configuration file or it is empty. Exiting..." >&2
-    exit 1
-  else
-    echo $line
-  fi
+# Exit codes:
+function exitBadUsage() {
+    usage; exit 1;
 }
 
-
-checkFile(){
-# Checks that $1 is a file and returns $1. If not, exits with 1.
-  if [[ -f $1 ]]; then
-    echo $1
-  else
-    echo "Could not find file \"$1\". Exiting..." >&2
-    exit 1
-  fi
+function exitIfFileMissing() {
+    if [[ ! -f "$1" ]]; then
+        echo "Could not find file \"$1\". Exiting..." >&2
+        exit 2
+    fi
 }
 
-
-setRcloneOptions(){
-# Set options for Rclone
-  local jobBasename=$1
-  local dryrun=$2
-  
-  local configFile
-  local logFile
-  local filterfromFile
-	local config
-	local log
-	local filter
-	local options
-
-  # Set some file paths:
-  configFile=$(checkFile "$HOME/.config/rclone/rclone.conf") || exit 1
-  logFile="$confPath/log/$jobBasename.log"
-  filterfromFile=$(checkFile "$confPath/filter-from/$jobBasename.filter") || exit 1
-
-  # Set dryrun option
-  if [[ $dryrun == TRUE ]]; then
-    dryrun="--dry-run"
-  else
-    dryrun=""
-  fi
-
-  # Set rclone options:
-  # --config: read config from $configFile.
-  # --log-level:       INFO: prints everything but debug events. DEBUG: prints ALL events.
-	# --log-file:        save log in $logFile.
-	# --filter-from:     filter files as in $filterfromFile.
-  # --dry-run:         rclone will NOT actually make any changes in remote server. This is controlled by the "dryrun=" line in the job config file.
-	# --progress:        show progress.
-	# --links:           store local symlinks as text file '.rclonelink' in remote server.
-	# --track-renames:   moved / renamed files will be moved remotely server-side. If not set, the "new" file will be reuploaded and the "old" one deleted.
-	config="--config $configFile"
-	log="--log-level INFO --log-file $logFile"
-	filter="--filter-from $filterfromFile"
-	options="$config $log $filter $dryrun --progress --links --track-renames"
-
-	echo $options
+function exitMissingKey() {
+    echo "Key \"$1\" is missing in your configuration file, or it is empty. Exiting..." >&2
+    exit 3
 }
 
-
-printJobInfo(){
-# Prints some info of the sync job that will be run
-  local jobName=$1
-  local sourcePath=$2
-  local destinationPath=$3
-  local dryrun=$4
-  
-	echo -e "\nRunning job \"$jobName\"..."
-
-	if [ "$dryrun" == "TRUE" ]; then
-	  echo "INFO: dry-run is set to YES. It will NOT make any real changes."
-	else
-	  echo "INFO: dry-run is set to NO. It WILL actually WRITE / DELETE files."
-	fi
-
-	echo "Source path . . : $sourcePath"
-	echo "Destination path: $destinationPath"
-	echo "" # Blank line
+function readJobFileLine() {
+    local file=$1
+    local key=$2
+    local value; value=$(grep "$key" "$file" | cut --fields=2 --delimiter="=")
+    test -z "$value" && exitMissingKey "$key"
+    echo "$value"
 }
 
+function callRclone() {
+    local jobFile=$1
 
-callRclone(){
-# Calls rclone and makes de sync job happen
-  local jobName=$1
-  local jobBasename=$2
-  local options=$3
-  local sourcePath=$4
-  local destinationPath=$5
+    # Read params from file
+    local dryrun; dryrun=$(readJobFileLine "$jobFile" dryrun)
+    local jobName; jobName=$(readJobFileLine "$jobFile" jobName)
+    local sourcePath; sourcePath=$(readJobFileLine "$jobFile" sourcePath)                 # can't check if dir exists, could be in remote
+    local destinationPath; destinationPath=$(readJobFileLine "$jobFile" destinationPath)  # can't check if dir exists, could be in remote
+    local jobBasename; jobBasename=$(basename "$jobFile")
 
-  local lockFile
-  local logFile
-  
-	lockFile="$confPath/lock/$jobBasename.lock"
-  logFile="$confPath/log/$jobBasename.log"
-  
-	# Display notification
-  DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Syncing $jobName"
-	# Remove last log file to keep it manageable
-  rm --force $logFile
-	# Call rclone (flock won't allow it if it is already running ($lockFile exists).
-  flock -n $lockFile rclone sync $options $sourcePath $destinationPath
+    # Read set some file paths
+    local configFile="$HOME/.config/rclone/rclone.conf";              exitIfFileMissing "$configFile"
+    local filterfromFile="$confPath/filter-from/$jobBasename.filter"; exitIfFileMissing "$filterfromFile"
+    local lockFile="$confPath/lock/$jobBasename.lock"                 # it's OK if file doesn't exist
+    local logFile="$confPath/log/$jobBasename.log"                    # it's OK if file doesn't exist
+    test -f "$logFile" && rm "$logFile" # Remove last log file to keep its size manageable
+
+    # Print the job info
+    echo -e "\nRunning job \"$jobName\"..."
+    echo -e "Source path . . : $sourcePath \nDestination path: $destinationPath"
+    test "$dryrun" == "TRUE" && echo "INFO: --dry-run is set. This will NOT make any real changes."
+    echo ""
+    # Display a notification
+    DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting sync $jobName"
+
+    # Set the rclone parameters                         # Params description:
+    local rcloneParams=(sync)                           # makes destination identic to source
+    rcloneParams+=(--config "$configFile")              # read config from $configFile.
+    rcloneParams+=(--log-level INFO)                    # INFO: prints everything but debug events. DEBUG: prints ALL events.
+    rcloneParams+=(--log-file "$logFile")               # save log to $logFile.
+    rcloneParams+=(--filter-from "$filterfromFile")     # filter files as in $filterfromFile.
+    rcloneParams+=(--progress)                          # show progress.
+    rcloneParams+=(--links)                             # store local symlinks as text files '.rclonelink' in remote server.
+    rcloneParams+=(--track-renames)                     # moved files will be moved remotely server-side (instead of deleted and reuploaded)
+    test "$dryrun" == TRUE && rcloneParams+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dryrun=" line in the job config file.
+    rcloneParams+=("$sourcePath")
+    rcloneParams+=("$destinationPath")
+
+    # Call rclone using flock (it will prevent from calling rclone if the job is already running, i.e. $lockFile exists).
+    flock -n "$lockFile" rclone "${rcloneParams[@]}" || echo "Job is already running!"
 }
 
-
-doJob(){
-# Takes jobFile path as $1, reads the options and calls Rclone
-  local jobFile=$1
-
-  local jobBasename
-  local jobName
-  local sourcePath
-  local destinationPath
-  local dryrun
-  local options
-  
-  jobBasename=$(basename $jobFile)
-  jobName=$(readJobFileLine "jobName" $jobFile)
-  sourcePath=$(readJobFileLine "sourcePath" $jobFile)
-  destinationPath=$(readJobFileLine "destinationPath" $jobFile)
-  dryrun=$(readJobFileLine "dryrun" $jobFile)
-  options=$(setRcloneOptions $jobBasename $dryrun)
-
-  printJobInfo "$jobName" $sourcePath $destinationPath $dryrun
-
-  callRclone "$jobName" $jobBasename "$options" $sourcePath $destinationPath
+function timeSinceModified() {
+    local file=$1
+    test ! -f "$file" && echo "NEVER!" && return 0
+    local seconds; seconds=$(("$(date -u +%s)" - "$(date -ur "$file" +%s)"))
+    echo "$((seconds/3600/24)) days and $((seconds/3600%24)) hours"
 }
 
+function runInteractive() {
+    local filesArray jobFile jobName logFile userInput idx
 
-printTime(){
-# Prints time last modification of logFile
-  local logFile=$1
+    # Get all the files in the jobs folder
+    mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
 
-  local timeLastModified=$(date +%s -r $logFile) # Time of last modification, in seconds
-  local timeNow=$(date +%s) # Current time, in seconds
-  local seconds=$((timeNow - timeLastModified))
-  local days=$((seconds/86400))
-  local hours=$(((seconds%86400)/3600))
-  echo "   Last sync: $days days $hours hours ago"
+    while true; do
+        # Print the menu
+        echo "List of available jobs:"
+        for idx in "${!filesArray[@]}"; do
+            jobFile=${filesArray[$idx]}; exitIfFileMissing "$jobFile" # Should not be necessary, but just in case...
+            jobName=$(readJobFileLine "$jobFile" jobName)
+            logFile="$confPath/log/$(basename "$jobFile").log"
+            echo "$idx) $jobName"
+            echo "    Last sync: $(timeSinceModified "$logFile")"
+        done
+
+        # Read the user input
+        read -r -p "Choose 0-$idx (or Q to exit): " userInput
+        case $userInput in
+            [0-$idx])
+                callRclone "$(realpath "${filesArray[$userInput]}")" ;;
+            q|Q|exit)
+                break ;;
+            *)
+                echo "Sorry! Invalid option, try again." ;;
+        esac
+    done
 }
 
-
-buildMenu(){
-# Reads all the config files and prints the menu
-  local -n files=$1
-  local -n num=$2
-
-  local i
-  local jobFile
-  local jobName
-  local logFile
-  
-  # Get all the files in the jobs folder, store them in an array
-  files=($(ls -d $confPath/jobs/*))
-
-  echo "List of available jobs:" >&2
-  for i in ${!files[@]}; do
-    # Read from file
-    jobFile=${files[$i]}
-    jobName=$(readJobFileLine "jobName" $jobFile)
-    logFile="$confPath/log/$(basename $jobFile).log"
-    # Print menu item
-    echo "$i) $jobName"
-    printTime $logFile
-  done
-  
-  num=$i
+runAutomatic(){
+    local jobFile="$confPath/jobs/$1"; exitIfFileMissing "$jobFile"
+    callRclone "$jobFile"
 }
 
-
-runMenu(){
-# Calls buildMenu and asks for user input
-  local filesList
-  local numFiles
-  local jobFile
-  
-  while true; do
-    buildMenu filesList numFiles
-    read -p "Choose 0-$numFiles (or Q to exit): " userInput
-    case $userInput in
-      [0-$numFiles])
-        jobFile=$(realpath ${filesList[$userInput]})
-        doJob $jobFile
-        ;;
-      q|Q|exit)
-        break;;
-      *)
-        echo "Sorry! Invalid option, try again.";;
+function main() {
+    case $# in
+        0) runInteractive ;;
+        1) runAutomatic "$1" ;;
+        *) exitBadUsage ;;
     esac
-  done
-}
-
-
-runFile(){
-# Check that file name from $1 exists and call doJob(). If not, exit with error.
-  local jobFile="$confPath/jobs/$1"
-  
-  if [ -f "$jobFile" ]; then
-    doJob $jobFile
-  else
-    echo "File $jobFile not found. Exiting."
-    exit 1
-  fi
 }
 
 main "${@}"
