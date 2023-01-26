@@ -79,7 +79,7 @@ function main() {
 
     while true; do
         # Print the menu
-        echo "List of available jobs:"
+        echo "rclone-jobman: REMOVE JOB"
         for idx in "${!filesArray[@]}"; do
             jobFile=${filesArray[$idx]}
             jobName=$(readJobFileLine "$jobFile" jobName)
@@ -88,7 +88,7 @@ function main() {
         echo "r|q) Return to main menu."
         
         # Read the user input
-        read -r -p "Choose one job to remove: " userInput; echo""
+        read -r -p "Choose one option: " userInput; echo""
         case $userInput in
             [0-$idx]) removeJob "$(realpath "${filesArray[$userInput]}")" ;;
             r|R|q|Q)  break ;;
