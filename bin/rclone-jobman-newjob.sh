@@ -25,7 +25,12 @@ function exitBadUsage() {     # exit code 1
 }
 
 function pressAnyKey() {
-    read -rsn 1 -p "Press any key to continue." && echo ""
+    local userInput
+    read -rsn 1 -p "Press C to cancel, or any key to continue." userInput && echo ""
+    case $userInput in
+        c|C)  return 1 ;;
+        *)    return 0 ;;
+    esac
 }
 
 function askConfirmation() {  # exit code 2
@@ -60,7 +65,9 @@ function createNewJob() {
     read -r -p "Descriptive name: "  jobName
     read -er -p "Source path: "      sourcePath
     read -er -p "Destinatino path: " destinationPath
-    dryrun=TRUE # Should ask user?
+    echo "Dry-run is set to TRUE by default. You can set it to FALSE now. Or edit it later. "
+    read -r -p "Type FALSE to set dryrun to FALSE. : " dryrun
+    [[ "$dryrun" == "FALSE" ]] || dryrun="TRUE"
 
     # Ask for confirmation
     echo "Is this correct?"
@@ -68,7 +75,7 @@ function createNewJob() {
     echo "Descriptive name: $jobName"
     echo "Source path:      $sourcePath"
     echo "Destination path: $destinationPath"
-    echo "--dry-run option: $dryrun (for now, this is set to TRUE by default.)" # Remove text if this changes
+    echo "--dry-run option: $dryrun"
     askConfirmation
 
     # Create file or empty them
@@ -90,8 +97,7 @@ function createNewJob() {
         echo "# Check out https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file for reference."
     } >> "$filterfromFile"
     echo "I will now open the file $filterfromFile so you can edit it."
-    pressAnyKey
-    /usr/bin/env editor "$filterfromFile"
+    pressAnyKey && /usr/bin/env editor "$filterfromFile"
 
     exit 0
 }
