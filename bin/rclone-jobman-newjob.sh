@@ -38,7 +38,7 @@ function askConfirmation() {  # exit code 2
 }
 
 function promptIfFileExists() {
-    test ! -f "$1" && return 0
+    [[ -f "$1" ]] || return 0
     echo "WARNING: file $1 already exists. Do you want to overwrite it?"
     askConfirmation
 }

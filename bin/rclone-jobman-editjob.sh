@@ -49,7 +49,7 @@ function readJobFileLine() {
     local file=$1
     local key=$2
     local value; value=$(grep "$key" "$file" | cut --fields=2 --delimiter="=")
-    test -z "$value" && exitMissingKey "$key"
+    [[ -z "$value" ]] && exitMissingKey "$key"
     echo "$value"
 }
 
