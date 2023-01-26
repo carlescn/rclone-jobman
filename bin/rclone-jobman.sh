@@ -19,28 +19,26 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-readonly scriptName=$0
+readonly scriptName="rclone-jobman.sh"
 readonly confPath="$HOME/.config/rclone-jobman"
 
-# Intended usage:
-function usage() {
+function usage() {              # Intended usage
     echo "Usage: $scriptName [ job_file ]"
 }
 
-# Exit codes:
-function exitBadUsage() {
+function exitBadUsage() {       # exit code 1
     usage; exit 1;
 }
 
-function exitIfFileMissing() {
+function exitIfFileMissing() {  # exit code 2
     if [[ ! -f "$1" ]]; then
-        echo "Could not find file \"$1\". Exiting..." >&2
+        echo "ERROR: Could not find file \"$1\"." >&2
         exit 2
     fi
 }
 
-function exitMissingKey() {
-    echo "Key \"$1\" is missing in your configuration file, or it is empty. Exiting..." >&2
+function exitMissingKey() {     # exit code 3
+    echo "ERROR: Key \"$1\" is missing in your configuration file, or it is empty." >&2
     exit 3
 }
 
@@ -62,7 +60,7 @@ function callRclone() {
     local destinationPath; destinationPath=$(readJobFileLine "$jobFile" destinationPath)  # can't check if dir exists, could be in remote
     local jobBasename; jobBasename=$(basename "$jobFile")
 
-    # Read set some file paths
+    # Set some file paths
     local configFile="$HOME/.config/rclone/rclone.conf";              exitIfFileMissing "$configFile"
     local filterfromFile="$confPath/filter-from/$jobBasename.filter"; exitIfFileMissing "$filterfromFile"
     local lockFile="$confPath/lock/$jobBasename.lock"                 # it's OK if file doesn't exist
@@ -109,24 +107,28 @@ function runInteractive() {
 
     while true; do
         # Print the menu
-        echo "List of available jobs:"
+        echo "List of available options:"
         for idx in "${!filesArray[@]}"; do
             jobFile=${filesArray[$idx]}; exitIfFileMissing "$jobFile" # Should not be necessary, but just in case...
             jobName=$(readJobFileLine "$jobFile" jobName)
             logFile="$confPath/log/$(basename "$jobFile").log"
             echo "$idx) $jobName"
-            echo "    Last sync: $(timeSinceModified "$logFile")"
+            echo "   [last sync: $(timeSinceModified "$logFile")]"
         done
+        echo "n) Create new job."
+        echo "e) Edit job."
+        echo "d) Delete job."
+        echo "q) Exit."
 
         # Read the user input
-        read -r -p "Choose 0-$idx (or Q to exit): " userInput
+        read -r -p "Choose one: " userInput
         case $userInput in
-            [0-$idx])
-                callRclone "$(realpath "${filesArray[$userInput]}")" ;;
-            q|Q|exit)
-                break ;;
-            *)
-                echo "Sorry! Invalid option, try again." ;;
+            [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
+            n|N)      rclone-jobman-newjob.sh || continue ;;
+            e|E)      echo "Sorry, still not implemented." ;;
+            d|D)      echo "Sorry, still not implemented." ;;
+            q|Q|exit) break ;;
+            *)        echo "Invalid option, try again!" ;;
         esac
     done
 }
@@ -142,6 +144,7 @@ function main() {
         1) runAutomatic "$1" ;;
         *) exitBadUsage ;;
     esac
+    exit 0
 }
 
 main "${@}"
