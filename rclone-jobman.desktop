@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=rclone-jobman
 Comment=Rclone job manager
-Exec=rclone-jobman
+Exec=rclone-jobman.sh
 Icon=rclone.png
 Terminal=true
 Type=Application
