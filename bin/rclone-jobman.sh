@@ -102,10 +102,10 @@ function timeSinceModified() {
 function runInteractive() {
     local filesArray jobFile jobName logFile userInput idx
 
-    # Get all the files in the jobs folder
-    mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
-
     while true; do
+        # Get all the files in the jobs folder
+        mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
+        
         # Print the menu
         echo "List of available options:"
         for idx in "${!filesArray[@]}"; do
@@ -127,8 +127,8 @@ function runInteractive() {
             [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
             n|N)      rclone-jobman-newjob.sh || continue ;;
             e|E)      rclone-jobman-editjob.sh || continue ;;
-            d|D)      echo -e "Sorry, not implemented yet. \n" ;;
-            l|L)      echo -e "Sorry, not implemented yet. \n" ;;
+            d|D)      rclone-jobman-removejob.sh || continue ;;
+            l|L)      echo "Sorry, not implemented yet" ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
