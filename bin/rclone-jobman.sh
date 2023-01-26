@@ -92,33 +92,6 @@ function callRclone() {
     flock -n "$lockFile" rclone "${rcloneParams[@]}" || echo "Job is already running!"
 }
 
-function showLog() {
-    local filesArray jobFile jobName logFile userInput idx
-    # Get all the files in the jobs folder
-    mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
-
-    while true; do        
-        # Print the menu
-        echo "List of available jobs:"
-        local logFiles=()
-        for idx in "${!filesArray[@]}"; do
-            jobFile=${filesArray[$idx]};
-            jobName=$(readJobFileLine "$jobFile" jobName)
-            logFiles+=("$confPath/log/$(basename "$jobFile").log")
-            echo "$idx) $jobName"
-        done
-        echo "r|q) Return to main menu."
-
-        # Read the user input
-        read -r -p "Choose one job to show its log file: " userInput; echo ""
-        case $userInput in
-            [0-$idx]) [[ -f ${logFiles[$userInput]} ]] && more "${logFiles[$userInput]}" ;;
-            r|R|q|Q)  break ;;
-            *)        echo -e "Invalid option, try again! \n" ;;
-        esac
-    done
-}
-
 function timeSinceModified() {
     local file=$1
     test ! -f "$file" && echo "NEVER!" && return 0
@@ -134,7 +107,7 @@ function runInteractive() {
         mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
         
         # Print the menu
-        echo "List of available options:"
+        echo "rclone-jobman: MAIN MENU"
         for idx in "${!filesArray[@]}"; do
             jobFile=${filesArray[$idx]}; exitIfFileMissing "$jobFile" # Should not be necessary, but just in case...
             jobName=$(readJobFileLine "$jobFile" jobName)
@@ -144,18 +117,18 @@ function runInteractive() {
         done
         echo "n) Create new job."
         echo "e) Edit job."
-        echo "d) Delete job."
+        echo "r) Remove job."
         echo "l) Read log file."
         echo "q) Exit."
 
         # Read the user input
-        read -r -p "Choose one: " userInput; echo ""
+        read -r -p "Choose one option: " userInput; echo ""
         case $userInput in
             [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
             n|N)      rclone-jobman-newjob.sh || continue ;;
             e|E)      rclone-jobman-editjob.sh || continue ;;
-            d|D)      rclone-jobman-removejob.sh || continue ;;
-            l|L)      showLog ;;
+            r|R)      rclone-jobman-removejob.sh || continue ;;
+            l|L)      rclone-jobman-showlog.sh || continue ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac

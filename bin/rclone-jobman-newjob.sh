@@ -46,6 +46,7 @@ function promptIfFileExists() {
 function createNewJob() {
     local jobBasename jobName dryrun sourcePath destinationPath
 
+    echo "rclone-jobman: NEW JOB"
     echo "Please input the following settings:"
 
     # Ask for filename. Ask if any file exists.
@@ -56,9 +57,9 @@ function createNewJob() {
     local logFile="$confPath/log/$jobBasename.log";                   promptIfFileExists "$logFile"
 
     # Ask for the settings
-    read -r -p "Descriptive name: " jobName
-    read -r -p "Source path: "      sourcePath
-    read -r -p "Destinatino path: " destinationPath
+    read -r -p "Descriptive name: "  jobName
+    read -er -p "Source path: "      sourcePath
+    read -er -p "Destinatino path: " destinationPath
     dryrun=TRUE # Should ask user?
 
     # Ask for confirmation
