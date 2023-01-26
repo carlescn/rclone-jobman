@@ -3,12 +3,12 @@
 ###################################################################
 #Script Name : rclone-jobman.sh
 #Description : Simple sync-job manager for rclone.
-#              If no argument is passed, it looks for all the files in ~/.config/rclone-jobman/jobs.
-#              Shows their names and the time since their where last run.
-#              Then lets you choose a job tu run. Once finished, it returns to the menu.
-#              It also accepts one file name as a parameter,
-#              which must exist in ~/.config/rclone-jobman/jobs.
-#              If so, it runs the corresponding job.
+#              If no argument is passed, 
+#              it looks for all the files in ~/.config/rclone-jobman/jobs,
+#              prints the main menu and asks for user input.
+#              Alternatively, it also accepts one file name as a parameter,
+#              and runs the corresponding job.
+#              The file must exist in ~/.config/rclone-jobman/jobs.
 #Args        : Either nothing or the name of a job file.
 #Author      : CarlesCN
 #E-mail      : drtlof@gmail.com
@@ -21,6 +21,7 @@ set -euo pipefail
 
 readonly scriptName="rclone-jobman.sh"
 readonly confPath="$HOME/.config/rclone-jobman"
+scriptDir=$(dirname "$(realpath "$0")"); readonly scriptDir
 
 function usage() {              # Intended usage
     echo "Usage: $scriptName [ job_file ]"
@@ -46,7 +47,7 @@ function readJobFileLine() {
     local file=$1
     local key=$2
     local value; value=$(grep "$key" "$file" | cut --fields=2 --delimiter="=")
-    test -z "$value" && exitMissingKey "$key"
+    [[ -z "$value" ]] && exitMissingKey "$key"
     echo "$value"
 }
 
@@ -65,12 +66,12 @@ function callRclone() {
     local filterfromFile="$confPath/filter-from/$jobBasename.filter"; exitIfFileMissing "$filterfromFile"
     local lockFile="$confPath/lock/$jobBasename.lock"                 # it's OK if file doesn't exist
     local logFile="$confPath/log/$jobBasename.log"                    # it's OK if file doesn't exist
-    test -f "$logFile" && rm "$logFile" # Remove last log file to keep its size manageable
+    [[ -f "$logFile" ]] && rm "$logFile" # Remove last log file to keep its size manageable
 
     # Print the job info
     echo -e "\nRunning job \"$jobName\"..."
     echo -e "Source path . . : $sourcePath \nDestination path: $destinationPath"
-    test "$dryrun" == "TRUE" && echo "INFO: --dry-run is set. This will NOT make any real changes."
+    [[ "$dryrun" == "TRUE" ]] && echo "INFO: --dry-run is set. This will NOT make any real changes."
     echo ""
     # Display a notification
     DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting sync $jobName"
@@ -84,7 +85,7 @@ function callRclone() {
     rcloneParams+=(--progress)                          # show progress.
     rcloneParams+=(--links)                             # store local symlinks as text files '.rclonelink' in remote server.
     rcloneParams+=(--track-renames)                     # moved files will be moved remotely server-side (instead of deleted and reuploaded)
-    test "$dryrun" == TRUE && rcloneParams+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dryrun=" line in the job config file.
+    [[ "$dryrun" == TRUE ]] && rcloneParams+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dryrun=" line in the job config file.
     rcloneParams+=("$sourcePath")
     rcloneParams+=("$destinationPath")
 
@@ -94,7 +95,7 @@ function callRclone() {
 
 function timeSinceModified() {
     local file=$1
-    test ! -f "$file" && echo "NEVER!" && return 0
+    [[ ! -f "$file" ]] && echo "NEVER!" && return 0
     local seconds; seconds=$(("$(date -u +%s)" - "$(date -ur "$file" +%s)"))
     echo "$((seconds/3600/24)) days and $((seconds/3600%24)) hours"
 }
@@ -125,10 +126,10 @@ function runInteractive() {
         read -r -p "Choose one option: " userInput; echo ""
         case $userInput in
             [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
-            n|N)      rclone-jobman-newjob.sh || continue ;;
-            e|E)      rclone-jobman-editjob.sh || continue ;;
-            r|R)      rclone-jobman-removejob.sh || continue ;;
-            l|L)      rclone-jobman-showlog.sh || continue ;;
+            n|N)      "$scriptDir"/rclone-jobman-newjob.sh || continue ;;
+            e|E)      "$scriptDir"/rclone-jobman-editjob.sh || continue ;;
+            r|R)      "$scriptDir"/rclone-jobman-removejob.sh || continue ;;
+            l|L)      "$scriptDir"/rclone-jobman-showlog.sh || continue ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
