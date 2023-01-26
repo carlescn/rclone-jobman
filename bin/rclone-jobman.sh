@@ -118,17 +118,19 @@ function runInteractive() {
         echo "n) Create new job."
         echo "e) Edit job."
         echo "d) Delete job."
+        echo "l) Read log file."
         echo "q) Exit."
 
         # Read the user input
-        read -r -p "Choose one: " userInput
+        read -r -p "Choose one: " userInput; echo ""
         case $userInput in
             [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
             n|N)      rclone-jobman-newjob.sh || continue ;;
-            e|E)      echo "Sorry, still not implemented." ;;
-            d|D)      echo "Sorry, still not implemented." ;;
+            e|E)      rclone-jobman-editjob.sh || continue ;;
+            d|D)      echo -e "Sorry, not implemented yet. \n" ;;
+            l|L)      echo -e "Sorry, not implemented yet. \n" ;;
             q|Q|exit) break ;;
-            *)        echo "Invalid option, try again!" ;;
+            *)        echo -e "Invalid option, try again! \n" ;;
         esac
     done
 }
