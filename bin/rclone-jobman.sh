@@ -92,6 +92,33 @@ function callRclone() {
     flock -n "$lockFile" rclone "${rcloneParams[@]}" || echo "Job is already running!"
 }
 
+function showLog() {
+    local filesArray jobFile jobName logFile userInput idx
+    # Get all the files in the jobs folder
+    mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
+
+    while true; do        
+        # Print the menu
+        echo "List of available jobs:"
+        local logFiles=()
+        for idx in "${!filesArray[@]}"; do
+            jobFile=${filesArray[$idx]};
+            jobName=$(readJobFileLine "$jobFile" jobName)
+            logFiles+=("$confPath/log/$(basename "$jobFile").log")
+            echo "$idx) $jobName"
+        done
+        echo "r|q) Return to main menu."
+
+        # Read the user input
+        read -r -p "Choose one job to show its log file: " userInput; echo ""
+        case $userInput in
+            [0-$idx]) [[ -f ${logFiles[$userInput]} ]] && more "${logFiles[$userInput]}" ;;
+            r|R|q|Q)  break ;;
+            *)        echo -e "Invalid option, try again! \n" ;;
+        esac
+    done
+}
+
 function timeSinceModified() {
     local file=$1
     test ! -f "$file" && echo "NEVER!" && return 0
@@ -128,7 +155,7 @@ function runInteractive() {
             n|N)      rclone-jobman-newjob.sh || continue ;;
             e|E)      rclone-jobman-editjob.sh || continue ;;
             d|D)      rclone-jobman-removejob.sh || continue ;;
-            l|L)      echo "Sorry, not implemented yet" ;;
+            l|L)      showLog ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
