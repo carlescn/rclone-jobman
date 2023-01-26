@@ -16,11 +16,11 @@ set -euo pipefail
 readonly scriptName="rclone-jobman-editjob.sh"
 readonly confPath="$HOME/.config/rclone-jobman"
 
-function usage() {            # Intended usage:
+function usage() {              # Intended usage:
     echo "Usage: $scriptName (with no arguments)"
 }
 
-function exitBadUsage() {     # exit code 1
+function exitBadUsage() {       # exit code 1
     usage; exit 1;
 }
 
@@ -65,7 +65,7 @@ function editJob() {
 }
 
 function main() {
-    local filesArray jobFile jobName userInput
+    local filesArray jobFile jobName userInput idx
     # Get all the files in the jobs folder
     mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
 
@@ -83,7 +83,7 @@ function main() {
         read -r -p "Choose one job to edit: " userInput; echo""
         case $userInput in
             [0-$idx]) editJob "$(realpath "${filesArray[$userInput]}")" ;;
-            r|R|q|Q)      break ;;
+            r|R|q|Q)  break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
     done
