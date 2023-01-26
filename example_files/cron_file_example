@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+readonly user="username" # The script will be called as this user
+readonly script="/full/path/to/rclone-jobman.sh"
+readonly jobFile="example_jobfile" # Filename for the desired job
+
+sudo -u $user -i sh -c "$script $jobFile"
