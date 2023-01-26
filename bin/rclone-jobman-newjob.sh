@@ -24,6 +24,10 @@ function exitBadUsage() {     # exit code 1
     usage; exit 1;
 }
 
+function pressAnyKey() {
+    read -rsn 1 -p "Press any key to continue." && echo ""
+}
+
 function askConfirmation() {  # exit code 2
     local userInput
     read -r -p "Type YES to confirm: " userInput
@@ -66,11 +70,11 @@ function createNewJob() {
     echo "--dry-run option: $dryrun (for now, this is set to TRUE by default.)" # Remove text if this changes
     askConfirmation
 
-    # Create or empty files
+    # Create file or empty them
     cat /dev/null > "$jobFile"
     cat /dev/null > "$filterfromFile"
     cat /dev/null > "$lockFile"
-    cat /dev/null > "$logFile"
+    [[ -f "$logFile" ]] && rm "$logFile"  # Remove log file so menu says it has never been run.
     # Write the $jobFile
     {   echo "# Descriptive name for the sync job"
         echo "jobName=$jobName"
@@ -80,12 +84,12 @@ function createNewJob() {
         echo "sourcePath=$sourcePath"
         echo "destinationPath=$destinationPath" 
     } >> "$jobFile"
-    # Write the $filterfromFile and open editor
+    # Write the $filterfromFile and open with default editor
     {   echo "# This is the filter-from file for the job $jobFile."
         echo "# Check out https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file for reference."
     } >> "$filterfromFile"
     echo "I will now open the file $filterfromFile so you can edit it."
-    read -rsn 1 -p "Press any key." && echo ""
+    pressAnyKey
     /usr/bin/env editor "$filterfromFile"
 
     exit 0
