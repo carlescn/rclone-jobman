@@ -7,7 +7,7 @@
 #               and creates the necessary .config subdirectories.
 # Args        : None
 # Author      : CarlesCN
-# E-mail      : drtlof@gmail.com
+# E-mail      : carlesbioinformatics@gmail.com
 # License     : GNU General Public License v3.0
 ###################################################################
 
