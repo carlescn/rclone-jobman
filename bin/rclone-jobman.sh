@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 ###################################################################
-#Script Name : rclone-jobman.sh
-#Description : Simple sync-job manager for rclone.
-#              If no argument is passed, 
-#              it looks for all the files in ~/.config/rclone-jobman/jobs,
-#              prints the main menu and asks for user input.
-#              Alternatively, it also accepts one file name as a parameter,
-#              and runs the corresponding job.
-#              The file must exist in ~/.config/rclone-jobman/jobs.
-#Args        : Either nothing or the name of a job file.
-#Author      : CarlesCN
-#E-mail      : drtlof@gmail.com
+# Script Name : rclone-jobman.sh
+# Description : Simple sync-job manager for rclone.
+#               If no argument is passed, 
+#               it looks for all the files in ~/.config/rclone-jobman/jobs,
+#               prints the main menu and asks for user input.
+#               Alternatively, it also accepts one file name as a parameter,
+#               and runs the corresponding job.
+#               The file must exist in ~/.config/rclone-jobman/jobs.
+# Args        : Either nothing or the name of a job file.
+# Author      : CarlesCN
+# E-mail      : drtlof@gmail.com
 ###################################################################
 
 # -e script ends on error (exit != 0)
@@ -23,32 +23,12 @@ readonly scriptName="rclone-jobman.sh"
 readonly confPath="$HOME/.config/rclone-jobman"
 scriptDir=$(dirname "$(realpath "$0")"); readonly scriptDir
 
-function usage() {              # Intended usage
+source "$scriptDir/rclone-jobman_common_functions.sh"
+source "$scriptDir/rclone-jobman_submenus.sh"
+source "$scriptDir/rclone-jobman_newjob.sh"
+
+function usage() {
     echo "Usage: $scriptName [ job_file ]"
-}
-
-function exitBadUsage() {       # exit code 1
-    usage; exit 1;
-}
-
-function exitIfFileMissing() {  # exit code 2
-    if [[ ! -f "$1" ]]; then
-        echo "ERROR: Could not find file \"$1\"." >&2
-        exit 2
-    fi
-}
-
-function exitMissingKey() {     # exit code 3
-    echo "ERROR: Key \"$1\" is missing in your configuration file, or it is empty." >&2
-    exit 3
-}
-
-function readJobFileLine() {
-    local file=$1
-    local key=$2
-    local value; value=$(grep "$key" "$file" | cut --fields=2 --delimiter="=")
-    [[ -z "$value" ]] && exitMissingKey "$key"
-    echo "$value"
 }
 
 function callRclone() {
@@ -101,21 +81,23 @@ function timeSinceModified() {
 }
 
 function runInteractive() {
-    local filesArray jobFile jobName logFile userInput idx
+    local filesArray jobFile jobName logFile idx userInput
 
     while true; do
         # Get all the files in the jobs folder
         mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
         
         # Print the menu
-        echo "rclone-jobman: MAIN MENU"
+        echo "" # Blank line for clearer presentation
+        echo "rclone-jobman - MAIN MENU:"
         for idx in "${!filesArray[@]}"; do
-            jobFile=${filesArray[$idx]}; exitIfFileMissing "$jobFile" # Should not be necessary, but just in case...
+            jobFile=${filesArray[$idx]}
             jobName=$(readJobFileLine "$jobFile" jobName)
             logFile="$confPath/log/$(basename "$jobFile").log"
-            echo "$idx) $jobName"
-            echo "   [last sync: $(timeSinceModified "$logFile")]"
+            echo "$idx) $jobName" >&2
+            echo "   [last sync: $(timeSinceModified "$logFile")]" >&2
         done
+        echo "-----------------------"
         echo "n) Create new job."
         echo "e) Edit job."
         echo "r) Remove job."
@@ -126,10 +108,10 @@ function runInteractive() {
         read -r -p "Choose one option: " userInput; echo ""
         case $userInput in
             [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
-            n|N)      "$scriptDir"/rclone-jobman-newjob.sh || continue ;;
-            e|E)      "$scriptDir"/rclone-jobman-editjob.sh || continue ;;
-            r|R)      "$scriptDir"/rclone-jobman-removejob.sh || continue ;;
-            l|L)      "$scriptDir"/rclone-jobman-showlog.sh || continue ;;
+            n|N)      createNewJob || continue;;
+            e|E)      submenu editJob   "EDIT JOB" ;;
+            r|R)      submenu removeJob "REMOVE JOB" ;;
+            l|L)      submenu showLog   "SHOW LOG" ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
