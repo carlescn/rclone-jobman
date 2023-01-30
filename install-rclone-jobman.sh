@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 ###################################################################
-#Script Name : install-rclone-jobman.sh
-#Description : For use with rclone-jobman.sh. This "installs" the
-#              scripts, desktop entry and icon on the user environment.
-#              It also creates the necessary .config subdirectories.
-#Args        : -
-#Author      : CarlesCN
-#E-mail      : drtlof@gmail.com
+# Script Name : install-rclone-jobman.sh
+# Description : For use with rclone-jobman. This "installs" the
+#               scripts, desktop entry and icon on the user environment
+#               and creates the necessary .config subdirectories.
+# Args        : None
+# Author      : CarlesCN
+# E-mail      : drtlof@gmail.com
+# License     : GNU General Public License v3.0
 ###################################################################
 
 # -e script ends on error (exit != 0)
