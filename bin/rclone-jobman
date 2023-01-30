@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 
 ###################################################################
-# Script Name : rclone-jobman.sh
+# Script Name : rclone-jobman
 # Description : Simple sync-job manager for rclone.
-#               If no argument is passed, 
-#               it looks for all the files in ~/.config/rclone-jobman/jobs,
-#               prints the main menu and asks for user input.
-#               Alternatively, it also accepts one file name as a parameter,
-#               and runs the corresponding job.
-#               The file must exist in ~/.config/rclone-jobman/jobs.
-# Args        : Either nothing or the name of a job file.
+# Args        : [None]
+#                 Runs interactively with a simple text menu.
+#                 It load the available jobs from the files in 
+#                 ~/.config/rclone-jobman/jobs
+#               [job filename]
+#                 The file must exist in ~/.config/rclone-jobman/jobs.
+#                 It runs the corresponding job withou asking for user input
+#                 (intended for automation).
 # Author      : CarlesCN
 # E-mail      : drtlof@gmail.com
+# License     : GNU General Public License v3.0
 ###################################################################
 
 # -e script ends on error (exit != 0)

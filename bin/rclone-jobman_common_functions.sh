@@ -4,7 +4,7 @@
 # Library Name : rclone-jobman.sh
 # Description  : This library is part of rclone-jobman.
 #                It contains common functions.
-#                See main script for author and contact info.
+#                See main script for author, license and contact info.
 ###################################################################
 
 function exitBadUsage() {               # exit code 1
