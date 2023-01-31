@@ -8,80 +8,80 @@
 ###################################################################
 
 function submenu() {
-    local callFunction=$1
-    local nameFunction=$2
-    local filesArray jobFile jobName userInput idx 
+    local call_function=$1
+    local name_function=$2
+    local files_array job_file job_name user_input index 
     while true; do
         # Get all the files in the jobs folder
-        mapfile -t filesArray < <(ls -d "${confPath:?}"/jobs/*)
+        mapfile -t files_array < <(ls -d "${conf_path:?}"/jobs/*)
         
         # Print the menu
         echo "" # Blank line for clearer presentation
-        echo "rclone-jobman - $nameFunction:"
-        for idx in "${!filesArray[@]}"; do
-            jobFile=${filesArray[$idx]}
-            jobName=$(readJobFileLine "$jobFile" jobName)
-            echo "$idx) $jobName"
+        echo "rclone-jobman - $name_function:"
+        for index in "${!files_array[@]}"; do
+            job_file=${files_array[$index]}
+            job_name=$(read_job_file_line "$job_file" job_name)
+            echo "$index) $job_name"
         done
         echo "-----------------------"
         echo "q) Return to main menu."
         
         # Read the user input
-        read -r -p "Choose one option: " userInput; echo""
-        case $userInput in
-            [0-$idx])  "$callFunction" "$(realpath "${filesArray[$userInput]}")" ;;
+        read -r -p "Choose one option: " user_input; echo""
+        case $user_input in
+            [0-$index])  "$call_function" "$(realpath "${files_array[$user_input]}")" ;;
             q|Q)       return 0 ;;
             *)         echo "Invalid option, try again!" ;;
         esac
     done
 }
 
-function editJob() {
-    local jobFile=$1
-    local jobBasename; jobBasename=$(basename "$jobFile");            exitIfFileMissing "$jobFile"
-    local filterfromFile="$confPath/filter-from/$jobBasename.filter"; exitIfFileMissing "$filterfromFile"
+function edit_job() {
+    local job_file=$1
+    local job_basename; job_basename=$(basename "$job_file");           exit_if_file_missing "$job_file"
+    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
 
-    echo "Opening file $jobFile with your default text editor."
-    pressAnyKey && /usr/bin/env editor "$jobFile"
+    echo "Opening file $job_file with your default text editor."
+    press_any_key && /usr/bin/env editor "$job_file"
 
-    echo "Opening file $filterfromFile with your default text editor."
-    pressAnyKey && /usr/bin/env editor "$filterfromFile"
+    echo "Opening file $filterfrom_file with your default text editor."
+    press_any_key && /usr/bin/env editor "$filterfrom_file"
 
     echo "Done!"
 }
 
-function removeJob() {
-    local jobFile=$1
-    local jobBasename; jobBasename=$(basename "$jobFile")
-    local filterfromFile="$confPath/filter-from/$jobBasename.filter"
-    local lockFile="$confPath/lock/$jobBasename.lock"
-    local logFile="$confPath/log/$jobBasename.log"
+function remove_job() {
+    local job_file=$1
+    local job_basename; job_basename=$(basename "$job_file")
+    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"
+    local lock_file="$conf_path/lock/$job_basename.lock"
+    local log_file="$conf_path/log/$job_basename.log"
 
-    local filesToRemove=()
-    [[ -f $jobFile ]]        && filesToRemove+=("$jobFile")
-    [[ -f $filterfromFile ]] && filesToRemove+=("$filterfromFile")
-    [[ -f $lockFile ]]       && filesToRemove+=("$lockFile")
-    [[ -f $logFile ]]        && filesToRemove+=("$logFile")
+    local files_to_remove=()
+    [[ -f $job_file ]]        && files_to_remove+=("$job_file")
+    [[ -f $filterfrom_file ]] && files_to_remove+=("$filterfrom_file")
+    [[ -f $lock_file ]]       && files_to_remove+=("$lock_file")
+    [[ -f $log_file ]]        && files_to_remove+=("$log_file")
    
     echo "This will remove the following files:"
     local file
-    for file in "${filesToRemove[@]}"; do
+    for file in "${files_to_remove[@]}"; do
         echo "  $file"
     done
     echo "This operation is irreversible. Are you sure?"
-    askConfirmation || return 0
+    ask_for_confirmation || return 0
 
-    rm "${filesToRemove[@]}"
+    rm "${files_to_remove[@]}"
 }
 
-function showLog() {
-    local jobFile=$1
-    local logFile; logFile="$confPath/log/$(basename "$jobFile").log"
-    if [[ -f $logFile ]]; then
-        echo "[BEGIN $logFile]"
-        more "$logFile"
-        echo "[END $logFile]"
+function show_log() {
+    local job_file=$1
+    local log_file; log_file="$conf_path/log/$(basename "$job_file").log"
+    if [[ -f $log_file ]]; then
+        echo "[BEGIN $log_file]"
+        more "$log_file"
+        echo "[END $log_file]"
     else
-        echo "ERROR: Could not find file $logFile." >&2
+        echo "ERROR: Could not find file $log_file." >&2
     fi
 }
