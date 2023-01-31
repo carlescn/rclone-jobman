@@ -56,7 +56,7 @@ The basename of each job file will be used to uniquely identify it.
 Each job has three more files,
 that must be named with the same unique basename:  
 
-- A **filter-from file** defines the patters that rclone will use 
+- A **filterfrom file** defines the patters that rclone will use 
   to filter files from the source directory
   (see https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file)
 - A **log file**, where rclone will save the log of the last run.
@@ -79,7 +79,7 @@ The job files must be put under the `$HOME/.config/` directory
 following this structure:
 
 - `rclone-jobman/jobs/`: job files
-- `rclone-jobman/filter-from/`: filter-from files
+- `rclone-jobman/filterfrom/`: filterfrom files
 - `rclone-jobman/log/`: log files
 - `rclone-jobman/lock/`: lock files
 
