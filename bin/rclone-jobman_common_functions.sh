@@ -7,29 +7,30 @@
 #                See main script for author, license and contact info.
 ###################################################################
 
-function exit_bad_usage() {                   # exit code 1
+function exit_bad_usage() {        # EXIT CODE 1
     usage
     exit 1
 }
 
-function exit_if_file_missing() {             # exit code 2
+function exit_if_file_missing() {  # EXIT CODE 2
     if [[ ! -f "$1" ]]; then
         echo "ERROR: Could not find file $1." >&2
         exit 2
     fi
 }
 
-function exit_on_read_job_file_line_fail() {  # exit code 3
-    echo "ERROR: Key $1 is missing in your configuration file, or it is empty." >&2
-    exit 3
-}
-
-function read_job_file_line() {
-# Tries to read key & value pair from job file
+function read_job_file_line() {    # EXIT CODE 3
+# Tries to read key & value pair from job file. Exits on error.
+# Locates the first line that begins with key and gets the first word after the '=' sign.
+# Can't handle spaces next to the '=' sign.
+# Discards any text to the right of value (after a space).
     local file=$1
     local key=$2
-    local value; value=$(grep "$key" "$file" | cut --fields=2 --delimiter="=")
-    [[ -z "$value" ]] && exit_on_read_job_file_line_fail "$key"
+    local value; value=$(awk -F'[= ]' '/^'"$key"'/ {print $2; exit}' "$file" )
+    if [[ -z "$value" ]]; then
+        echo "ERROR: Key $key is missing in your configuration file, or it is empty." >&2
+        exit 3
+    fi
     echo "$value"
 }
 
