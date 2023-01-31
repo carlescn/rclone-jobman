@@ -7,7 +7,7 @@
 #                 Runs interactively with a simple text menu.
 #                 It load the available jobs from the files in 
 #                 ~/.config/rclone-jobman/jobs
-#               [job filename]
+#               [job_file_name]
 #                 The file must exist in ~/.config/rclone-jobman/jobs.
 #                 It runs the corresponding job withou asking for user input
 #                 (intended for automation).
@@ -21,83 +21,83 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-readonly scriptName="rclone-jobman.sh"
-readonly confPath="$HOME/.config/rclone-jobman"
-scriptDir=$(dirname "$(realpath "$0")"); readonly scriptDir
+readonly script_name="rclone-jobman.sh"
+readonly conf_path="$HOME/.config/rclone-jobman"
+script_dir=$(dirname "$(realpath "$0")"); readonly script_dir
 
-source "$scriptDir/rclone-jobman_common_functions.sh"
-source "$scriptDir/rclone-jobman_submenus.sh"
-source "$scriptDir/rclone-jobman_newjob.sh"
+source "$script_dir/rclone-jobman_common_functions.sh"
+source "$script_dir/rclone-jobman_submenus.sh"
+source "$script_dir/rclone-jobman_newjob.sh"
 
 function usage() {
-    echo "Usage: $scriptName [ job_file ]"
+    echo "Usage: $script_name [ job_file ]"
 }
 
-function callRclone() {
-    local jobFile=$1
+function call_rclone() {
+    local job_file=$1
 
     # Read params from file
-    local dryrun; dryrun=$(readJobFileLine "$jobFile" dryrun)
-    local jobName; jobName=$(readJobFileLine "$jobFile" jobName)
-    local sourcePath; sourcePath=$(readJobFileLine "$jobFile" sourcePath)                 # can't check if dir exists, could be in remote
-    local destinationPath; destinationPath=$(readJobFileLine "$jobFile" destinationPath)  # can't check if dir exists, could be in remote
-    local jobBasename; jobBasename=$(basename "$jobFile")
+    local dry_run; dry_run=$(read_job_file_line "$job_file" dry_run)
+    local job_name; job_name=$(read_job_file_line "$job_file" job_name)
+    local source_path; source_path=$(read_job_file_line "$job_file" source_path)                 # can't check if dir exists, could be in remote
+    local destination_path; destination_path=$(read_job_file_line "$job_file" destination_path)  # can't check if dir exists, could be in remote
+    local job_basename; job_basename=$(basename "$job_file")
 
     # Set some file paths
-    local configFile="$HOME/.config/rclone/rclone.conf";              exitIfFileMissing "$configFile"
-    local filterfromFile="$confPath/filter-from/$jobBasename.filter"; exitIfFileMissing "$filterfromFile"
-    local lockFile="$confPath/lock/$jobBasename.lock"                 # it's OK if file doesn't exist
-    local logFile="$confPath/log/$jobBasename.log"                    # it's OK if file doesn't exist
-    [[ -f "$logFile" ]] && rm "$logFile" # Remove last log file to keep its size manageable
+    local config_file="$HOME/.config/rclone/rclone.conf";                exit_if_file_missing "$config_file"
+    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
+    local lock_file="$conf_path/lock/$job_basename.lock"                 # it's OK if file doesn't exist
+    local log_file="$conf_path/log/$job_basename.log"                    # it's OK if file doesn't exist
+    [[ -f "$log_file" ]] && rm "$log_file" # Remove last log file to keep its size manageable
 
     # Print the job info
-    echo -e "\nRunning job \"$jobName\"..."
-    echo -e "Source path . . : $sourcePath \nDestination path: $destinationPath"
-    [[ "$dryrun" == "TRUE" ]] && echo "INFO: --dry-run is set. This will NOT make any real changes."
+    echo -e "\nRunning job \"$job_name\"..."
+    echo -e "Source path . . : $source_path \nDestination path: $destination_path"
+    [[ "$dry_run" == "TRUE" ]] && echo "INFO: --dry-run is set. This will NOT make any real changes."
     echo ""
     # Display a notification
-    DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting sync $jobName"
+    DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting sync $job_name"
 
-    # Set the rclone parameters                         # Params description:
-    local rcloneParams=(sync)                           # makes destination identic to source
-    rcloneParams+=(--config "$configFile")              # read config from $configFile.
-    rcloneParams+=(--log-level INFO)                    # INFO: prints everything but debug events. DEBUG: prints ALL events.
-    rcloneParams+=(--log-file "$logFile")               # save log to $logFile.
-    rcloneParams+=(--filter-from "$filterfromFile")     # filter files as in $filterfromFile.
-    rcloneParams+=(--progress)                          # show progress.
-    rcloneParams+=(--links)                             # store local symlinks as text files '.rclonelink' in remote server.
-    rcloneParams+=(--track-renames)                     # moved files will be moved remotely server-side (instead of deleted and reuploaded)
-    [[ "$dryrun" == TRUE ]] && rcloneParams+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dryrun=" line in the job config file.
-    rcloneParams+=("$sourcePath")
-    rcloneParams+=("$destinationPath")
+    # Set the rclone parameters                            # Params description:
+    local rclone_params=(sync)                             # makes destination identic to source
+    rclone_params+=(--config "$config_file")               # read config from $config_file.
+    rclone_params+=(--log-level INFO)                      # INFO: prints everything but debug events. DEBUG: prints ALL events.
+    rclone_params+=(--log-file "$log_file")                # save log to $log_file.
+    rclone_params+=(--filter-from "$filterfrom_file")      # filter files as in $filterfrom_file.
+    rclone_params+=(--progress)                            # show progress.
+    rclone_params+=(--links)                               # store local symlinks as text files '.rclonelink' in remote server.
+    rclone_params+=(--track-renames)                       # moved files will be moved remotely server-side (instead of deleted and reuploaded)
+    [[ "$dry_run" == TRUE ]] && rclone_params+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dry_run=" line in the job config file.
+    rclone_params+=("$source_path")
+    rclone_params+=("$destination_path")
 
-    # Call rclone using flock (it will prevent from calling rclone if the job is already running, i.e. $lockFile exists).
-    flock -n "$lockFile" rclone "${rcloneParams[@]}" || echo "Job is already running!"
+    # Call rclone using flock (it will prevent from calling rclone if the job is already running, i.e. $lock_file exists).
+    flock -n "$lock_file" rclone "${rclone_params[@]}" || echo "Job is already running!"
 }
 
-function timeSinceModified() {
+function time_since_file_modified() {
     local file=$1
     [[ ! -f "$file" ]] && echo "NEVER!" && return 0
     local seconds; seconds=$(("$(date -u +%s)" - "$(date -ur "$file" +%s)"))
     echo "$((seconds/3600/24)) days and $((seconds/3600%24)) hours"
 }
 
-function runInteractive() {
-    local filesArray jobFile jobName logFile idx userInput
+function run_interactive() {
+    local files_array job_file job_name log_file index user_input
 
     while true; do
         # Get all the files in the jobs folder
-        mapfile -t filesArray < <(ls -d "$confPath"/jobs/*)
+        mapfile -t files_array < <(ls -d "$conf_path"/jobs/*)
         
         # Print the menu
         echo "" # Blank line for clearer presentation
         echo "rclone-jobman - MAIN MENU:"
-        for idx in "${!filesArray[@]}"; do
-            jobFile=${filesArray[$idx]}
-            jobName=$(readJobFileLine "$jobFile" jobName)
-            logFile="$confPath/log/$(basename "$jobFile").log"
-            echo "$idx) $jobName" >&2
-            echo "   [last sync: $(timeSinceModified "$logFile")]" >&2
+        for index in "${!files_array[@]}"; do
+            job_file=${files_array[$index]}
+            job_name=$(read_job_file_line "$job_file" job_name)
+            log_file="$conf_path/log/$(basename "$job_file").log"
+            echo "$index) $job_name" >&2
+            echo "   [last sync: $(time_since_file_modified "$log_file")]" >&2
         done
         echo "-----------------------"
         echo "n) Create new job."
@@ -107,29 +107,29 @@ function runInteractive() {
         echo "q) Exit."
 
         # Read the user input
-        read -r -p "Choose one option: " userInput; echo ""
-        case $userInput in
-            [0-$idx]) callRclone "$(realpath "${filesArray[$userInput]}")" ;;
-            n|N)      createNewJob || continue;;
-            e|E)      submenu editJob   "EDIT JOB" ;;
-            r|R)      submenu removeJob "REMOVE JOB" ;;
-            l|L)      submenu showLog   "SHOW LOG" ;;
+        read -r -p "Choose one option: " user_input; echo ""
+        case $user_input in
+            [0-$index]) call_rclone "$(realpath "${files_array[$user_input]}")" ;;
+            n|N)      create_new_job || continue ;;
+            e|E)      submenu edit_job   "EDIT JOB" ;;
+            r|R)      submenu remove_job "REMOVE JOB" ;;
+            l|L)      submenu show_log   "SHOW LOG" ;;
             q|Q|exit) break ;;
             *)        echo -e "Invalid option, try again! \n" ;;
         esac
     done
 }
 
-runAutomatic(){
-    local jobFile="$confPath/jobs/$1"; exitIfFileMissing "$jobFile"
-    callRclone "$jobFile"
+run_automatic(){
+    local job_file="$conf_path/jobs/$1"; exit_if_file_missing "$job_file"
+    call_rclone "$job_file"
 }
 
 function main() {
     case $# in
-        0) runInteractive ;;
-        1) runAutomatic "$1" ;;
-        *) exitBadUsage ;;
+        0) run_interactive ;;
+        1) run_automatic "$1" ;;
+        *) exit_bad_usage ;;
     esac
     exit 0
 }

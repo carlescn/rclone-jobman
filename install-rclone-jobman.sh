@@ -16,19 +16,19 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-readonly appsdir="$HOME"/.local/share/applications
-readonly iconsdir="$HOME"/.local/share/icons
-readonly bindir="$HOME"/bin
+readonly app_sdir="$HOME"/.local/share/applications
+readonly icons_dir="$HOME"/.local/share/icons
+readonly bin_dir="$HOME"/bin
 
 [[ -z $HOME ]] && echo -e "ERROR: \$HOME variable is not set." && exit 1
-[[ ! -d "$appsdir" ]] && echo "ERROR: directory $appsdir not found." && exit 1
-[[ ! -d "$iconsdir" ]] && echo "ERROR: directory $iconsdir not found." && exit 1
-[[ $PATH == ?(*:)$bindir?(:*) ]] || echo -e "WARNING: $bindir is not on your \$PATH."
+[[ ! -d "$app_sdir" ]] && echo "ERROR: directory $app_sdir not found." && exit 1
+[[ ! -d "$icons_dir" ]] && echo "ERROR: directory $icons_dir not found." && exit 1
+[[ $PATH == ?(*:)$bin_dir?(:*) ]] || echo -e "WARNING: $bin_dir is not on your \$PATH."
 
-[[ -d "$bindir" ]] || mkdir -p bindir
-cp ./bin/* "$bindir"/
-cp ./rclone-jobman.desktop "$appsdir"/
-cp ./rclone.png "$iconsdir"/
+[[ -d "$bin_dir" ]] || mkdir -p bin_dir
+cp ./bin/* "$bin_dir"/
+cp ./rclone-jobman.desktop "$app_sdir"/
+cp ./rclone.png "$icons_dir"/
 
 mkdir -p "$HOME"/.config/rclone-jobman/jobs
 mkdir -p "$HOME"/.config/rclone-jobman/filter-from
