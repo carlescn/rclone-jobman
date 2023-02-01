@@ -21,9 +21,10 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-readonly script_name="rclone-jobman.sh"
+readonly script_name="rclone-jobman"
 readonly conf_path="$HOME/.config/rclone-jobman"
 script_dir=$(dirname "$(realpath "$0")"); readonly script_dir
+readonly box_width=100
 
 source "$script_dir/rclone-jobman_common_functions.sh"
 source "$script_dir/rclone-jobman_submenus.sh"
