@@ -10,29 +10,29 @@
 function submenu() {
     local call_function=$1
     local name_function=$2
-    local files_array job_file job_name user_input index 
+    local files_array job_file job_name
     while true; do
         # Get all the files in the jobs folder
         mapfile -t files_array < <(ls -d "${conf_path:?}"/jobs/*)
         
-        # Print the menu
-        echo "" # Blank line for clearer presentation
-        echo "rclone-jobman - $name_function:"
-        for index in "${!files_array[@]}"; do
-            job_file=${files_array[$index]}
+        # Get the menu entries
+        local menu_entries=()
+        for job_file in "${files_array[@]}"; do
             job_name=$(read_job_file_line "$job_file" job_name)
-            echo "$index) $job_name"
+            menu_entries+=("$job_file" "$job_name")
         done
-        echo "-----------------------"
-        echo "q) Return to main menu."
+
+        # Build the menu (output is the selected job_file)
+        local menu_height="${#files_array[@]}"
+        local box_height=$(( 8 + "$menu_height"))
+        local menu_out
+        menu_out=$(whiptail --backtitle "${script_name:?}" --title "$name_function" --noitem \
+            --menu "Choose a job" "$box_height" "${box_width:?}" "$menu_height" "${menu_entries[@]}" \
+            3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this cript exit
         
-        # Read the user input
-        read -r -p "Choose one option: " user_input; echo""
-        case $user_input in
-            [0-$index])  "$call_function" "$(realpath "${files_array[$user_input]}")" ;;
-            q|Q)       return 0 ;;
-            *)         echo "Invalid option, try again!" ;;
-        esac
+        # Manage the output
+        [[ -z "$menu_out" ]] && return 1  # Should not happen
+        "$call_function" "$(realpath "$menu_out")"
     done
 }
 
@@ -41,13 +41,13 @@ function edit_job() {
     local job_basename; job_basename=$(basename "$job_file");           exit_if_file_missing "$job_file"
     local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
 
-    echo "Opening file $job_file with your default text editor."
-    press_any_key && /usr/bin/env editor "$job_file"
+    local message="Open file $job_file to edit it?"
+    yes_no_dialog "$message" && /usr/bin/env editor "$job_file"
 
-    echo "Opening file $filterfrom_file with your default text editor."
-    press_any_key && /usr/bin/env editor "$filterfrom_file"
+    message="Open file $filterfrom_file to edit it?"
+    yes_no_dialog "$message"  && /usr/bin/env editor "$filterfrom_file"
 
-    echo "Done!"
+    message_box "Finished editting job $job_basename!"
 }
 
 function remove_job() {
@@ -63,25 +63,26 @@ function remove_job() {
     [[ -f $lock_file ]]       && files_to_remove+=("$lock_file")
     [[ -f $log_file ]]        && files_to_remove+=("$log_file")
    
-    echo "This will remove the following files:"
+    local message=()
+    message+=("The following files will be permanently REMOVED:\n")
     local file
     for file in "${files_to_remove[@]}"; do
-        echo "  $file"
+        message+=("- $file\n")
     done
-    echo "This operation is irreversible. Are you sure?"
-    ask_for_confirmation || return 0
+    ask_for_confirmation "${message[@]}" || return 0
 
     rm "${files_to_remove[@]}"
+
+    message_box "Job $job_basename removed!"
 }
 
 function show_log() {
     local job_file=$1
     local log_file; log_file="$conf_path/log/$(basename "$job_file").log"
     if [[ -f $log_file ]]; then
-        echo "[BEGIN $log_file]"
-        more "$log_file"
-        echo "[END $log_file]"
+        # shellcheck disable=SC2046  # $(stty size) outputs fullscreen height and width
+        whiptail --backtitle "${script_name:?}" --title "$log_file" --textbox "$log_file" $(stty size) --scrolltext
     else
-        echo "ERROR: Could not find file $log_file." >&2
+        error_box "ERROR: Could not find file $log_file."
     fi
 }
