@@ -31,7 +31,7 @@ source "$script_dir/rclone-jobman_submenus.sh"
 source "$script_dir/rclone-jobman_newjob.sh"
 
 function usage() {
-    echo "Usage: $script_name [ job_file ]"
+    echo "Usage: $script_name [job_file]"
 }
 
 function call_rclone() {
@@ -45,10 +45,10 @@ function call_rclone() {
     local job_basename; job_basename=$(basename "$job_file")
 
     # Set some file paths
-    local config_file="$HOME/.config/rclone/rclone.conf";                exit_if_file_missing "$config_file"
+    local config_file="$HOME/.config/rclone/rclone.conf";               exit_if_file_missing "$config_file"
     local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
-    local lock_file="$conf_path/lock/$job_basename.lock"                 # it's OK if file doesn't exist
-    local log_file="$conf_path/log/$job_basename.log"                    # it's OK if file doesn't exist
+    local lock_file="$conf_path/lock/$job_basename.lock"                # it's OK if file doesn't exist
+    local log_file="$conf_path/log/$job_basename.log"                   # it's OK if file doesn't exist
     [[ -f "$log_file" ]] && rm "$log_file" # Remove last log file to keep its size manageable
 
     # Print the job info
@@ -73,7 +73,7 @@ function call_rclone() {
     rclone_params+=("$destination_path")
 
     # Call rclone using flock (it will prevent from calling rclone if the job is already running, i.e. $lock_file exists).
-    flock -n "$lock_file" rclone "${rclone_params[@]}" || echo "Job is already running!"
+    flock -n "$lock_file" rclone "${rclone_params[@]}"
 }
 
 function time_since_file_modified() {
@@ -84,39 +84,43 @@ function time_since_file_modified() {
 }
 
 function run_interactive() {
-    local files_array job_file job_name log_file index user_input
+    local files_array job_file job_name log_file last_sync index user_input
 
     while true; do
         # Get all the files in the jobs folder
         mapfile -t files_array < <(ls -d "$conf_path"/jobs/*)
         
-        # Print the menu
-        echo "" # Blank line for clearer presentation
-        echo "rclone-jobman - MAIN MENU:"
+        # Set the menu entries
+        local menu_entries=()
         for index in "${!files_array[@]}"; do
-            job_file=${files_array[$index]}
+            job_file="${files_array[$index]}"
             job_name=$(read_job_file_line "$job_file" job_name)
             log_file="$conf_path/log/$(basename "$job_file").log"
-            echo "$index) $job_name" >&2
-            echo "   [last sync: $(time_since_file_modified "$log_file")]" >&2
+            last_sync=$(time_since_file_modified "$log_file")
+            menu_entries+=("$index" "$job_name [last sync: $last_sync]")
         done
-        echo "-----------------------"
-        echo "n) Create new job."
-        echo "e) Edit job."
-        echo "r) Remove job."
-        echo "l) Read log file."
-        echo "q) Exit."
+        menu_entries+=("New"    "Create new job.")
+        menu_entries+=("Edit"   "Edit job.")
+        menu_entries+=("Remove" "Remove job.")
+        menu_entries+=("Log"    "Read log file.")
 
-        # Read the user input
-        read -r -p "Choose one option: " user_input; echo ""
-        case $user_input in
-            [0-$index]) call_rclone "$(realpath "${files_array[$user_input]}")" ;;
-            n|N)      create_new_job || continue ;;
-            e|E)      submenu edit_job   "EDIT JOB" ;;
-            r|R)      submenu remove_job "REMOVE JOB" ;;
-            l|L)      submenu show_log   "SHOW LOG" ;;
-            q|Q|exit) break ;;
-            *)        echo -e "Invalid option, try again! \n" ;;
+        # Build the menu
+        local menu_height=$(( "${#menu_entries[@]}" / 2))
+        local box_height=$(( 8 + "$menu_height"))
+        local menu_out
+        menu_out=$(whiptail --backtitle "$script_name" --title "MAIN MENU" \
+            --menu "Choose a job to run, or one of the options below:" \
+            "$box_height" "$box_width" "$menu_height" "${menu_entries[@]}" --cancel-button "Exit"\
+            3>&1 1>&2 2>&3) || exit 0  # Cancel button returns 1 and makes the cript exit with non-zero code
+        
+        # Manage the output
+        [[ -z "$menu_out" ]] && exit 4  # Should not happen (already have returned 0 if user pressed Cancel)
+        case "$menu_out" in
+            [0-$index]) call_rclone "$(realpath "${files_array[$menu_out]}")" || continue;;
+            New)    create_new_job  || continue     ;;
+            Edit)   submenu edit_job   "EDIT JOB"   ;;
+            Remove) submenu remove_job "REMOVE JOB" ;;
+            Log)    submenu show_log   "SHOW LOG"   ;;
         esac
     done
 }
