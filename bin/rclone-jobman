@@ -84,7 +84,7 @@ function time_since_file_modified() {
 }
 
 function run_interactive() {
-    local files_array job_file job_name log_file last_sync index user_input
+    local files_array job_file job_name log_file last_sync index
 
     while true; do
         # Get all the files in the jobs folder
