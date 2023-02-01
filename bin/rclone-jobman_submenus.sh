@@ -10,29 +10,30 @@
 function submenu() {
     local call_function=$1
     local name_function=$2
-    local files_array job_file job_name
+    local files_array job_file job_name index
     while true; do
         # Get all the files in the jobs folder
         mapfile -t files_array < <(ls -d "${conf_path:?}"/jobs/*)
         
-        # Get the menu entries
+        # Set the menu entries
         local menu_entries=()
-        for job_file in "${files_array[@]}"; do
+        for index in "${!files_array[@]}"; do
+            job_file="${files_array[$index]}"
             job_name=$(read_job_file_line "$job_file" job_name)
-            menu_entries+=("$job_file" "$job_name")
+            menu_entries+=("$index" "$job_name")
         done
 
-        # Build the menu (output is the selected job_file)
+        # Build the menu
         local menu_height="${#files_array[@]}"
         local box_height=$(( 8 + "$menu_height"))
         local menu_out
-        menu_out=$(whiptail --backtitle "${script_name:?}" --title "$name_function" --noitem \
-            --menu "Choose a job" "$box_height" "${box_width:?}" "$menu_height" "${menu_entries[@]}" \
-            3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this cript exit
+        menu_out=$(whiptail --backtitle "${script_name:?}" --title "$name_function" \
+            --menu "Choose a job:" "$box_height" "${box_width:?}" "$menu_height" "${menu_entries[@]}" \
+            3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this cript exit with non-zero code
         
         # Manage the output
-        [[ -z "$menu_out" ]] && return 1  # Should not happen
-        "$call_function" "$(realpath "$menu_out")"
+        [[ -z "$menu_out" ]] && return 1  # Should not happen (already have returned 0 if user pressed Cancel)
+        "$call_function" "$(realpath "${files_array[$menu_out]}")"
     done
 }
 
