@@ -8,34 +8,33 @@
 
 ## About
 
-**rclone-jobman** is a "job manager" 
-that aims to simplify dealing with multyple sync jobs 
+**rclone-jobman** is a "job manager"
+that aims to simplify dealing with multyple sync jobs
 with [Rclone](https://rclone.org/).
 
 ![rclone-jobman main menu](screenshot.png)
 
-I first wrote it as a very simple script 
-for my specific necessities, 
-but later I thought it would be a good exercice 
-to try and make it more convenient for general use. 
-So I expanded it adding subscripts 
+I first wrote it as a very simple script
+for my specific necessities,
+but later I thought it would be a good exercice
+to try and make it more convenient for general use.
+So I expanded it adding subscripts
 for adding, editing and removing jobs,
 and a simple user interface usin whiptail.
 
-For now, the Rclone arguments are "hard-coded" 
-(I mean, this is a script after all...) 
-for the way I use Rclone. 
-I may change this in the future 
-and make the arguments job-specific, 
+For now, the Rclone arguments are "hard-coded"
+(I mean, this is a script after all...)
+for the way I use Rclone.
+I may change this in the future
+and make the arguments job-specific,
 saving them on the [job file](#job-files) instead.
-
 
 ## Usage
 
 If rclone-jobman is called without any argument
-(the main intended use), 
-it will run in interactive mode. 
-It will print a menu 
+(the main intended use),
+it will run in interactive mode.
+It will print a menu
 listing all the available jobs and options
 and wait for user input.
 You can choose to run a job,
@@ -60,16 +59,16 @@ and if the rclone should be run with the --dry-run option.
 The basename of each job file will be used to uniquely identify it.
 
 Each job has three more files,
-that must be named with the same unique basename:  
+that must be named with the same unique basename:
 
-- A **filterfrom file** defines the patters that rclone will use 
+- A **filterfrom file** defines the patters that rclone will use
   to filter files from the source directory
-  (see https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file)
+  (see <https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file>)
 - A **log file**, where rclone will save the log of the last run.
   This file is erased at the start of every run.
-- A **lock file**, used with 
+- A **lock file**, used with
   [flock](https://manpages.debian.org/testing/util-linux/flock.1.en.html)
-  to prevent the job to be started 
+  to prevent the job to be started
   if the last execution has not ended,
   which could happen when used with automation.
 
@@ -78,7 +77,7 @@ that must be named with the same unique basename:
 The main script rclone-jobman.sh is intended to be put
 (or linked to)
 on one of the `$PATH` directories.
-The other subscripts (rclone-jobman-*.sh) must be in the same directory, 
+The other subscripts (rclone-jobman-*.sh) must be in the same directory,
 with the main script.
 
 The job files must be put under the `$HOME/.config/` directory
@@ -104,9 +103,9 @@ must be placed under `$HOME/.local/share/icons/`
 
 ## Install
 
-I provide a script named 
+I provide a script named
 [install-rclone-jobman.sh](https://github.com/carlescn/rclone-jobman/blob/main/install-rclone-jobman.sh)
-that "installs" all the files 
+that "installs" all the files
 (including the desktop entry and icon)
 on the user environment,
 and creates the necessary subdirectories under .config.
@@ -121,3 +120,4 @@ I've written the script on Bash v5.1, but should work on v4.0. It depens in some
   to draw the menus and dialog boxes.
   It should come pre-installed with most linux distributions
   (on some it's part of a package called newt). I've used v0.52.21 while writing the script. I haven't tested it on other versions.
+  
