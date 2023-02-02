@@ -3,13 +3,14 @@
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3.0-blue.svg)](https://github.com/carlescn/rclone-jobman/blob/main/LICENSE)
 [![made-with-bash-5.1](https://img.shields.io/badge/Made%20with-Bash%205.1-1f425f.svg?logo=gnubash)](https://www.gnu.org/software/bash/)
 [![Linux](https://img.shields.io/badge/OS-Linux-yellow.svg?logo=linux)](https://www.linux.org/)
-[![rclone-1.53.3](https://img.shields.io/badge/rclone-1.53.3-darkgreen.svg)](https://rclone.org/)
+[![Rclone-1.53.3](https://img.shields.io/badge/Depends%20on-Rclone-darkgreen.svg)](https://rclone.org/)
+[![whiptail-0.52.21](https://img.shields.io/badge/Depends%20on-whiptail-darkgreen.svg)](https://linux.die.net/man/1/whiptail)
 
 ## About
 
 **rclone-jobman** is a "job manager" 
-that aims to simplify managing multyple sync jobs 
-with [rclone](https://rclone.org/).
+that aims to simplify dealing with multyple sync jobs 
+with [Rclone](https://rclone.org/).
 
 I first wrote it as a very simple script 
 for my specific necessities, 
@@ -25,6 +26,8 @@ I may change this in the future
 and make the arguments job-specific, 
 saving them on the [job file](#job-files) instead.
 
+![rclone-jobman main menu](screenshot.png)
+
 ## Usage
 
 If rclone-jobman is called without any argument
@@ -33,8 +36,9 @@ it will run in interactive mode.
 It will print a menu 
 listing all the available jobs and options
 and wait for user input.
-Here you can run a sync job
-or create/edit/remove one.
+You can choose to run a job,
+create, edit or remove one,
+or read a log file.
 
 Alternatively,
 it can be called with only one argument
@@ -104,3 +108,14 @@ that "installs" all the files
 (including the desktop entry and icon)
 on the user environment,
 and creates the necessary subdirectories under .config.
+
+## Dependencies
+
+I've written the script on Bash v5.1, but should work on v4.0. It depens in some preinstalled software:
+
+- [rclone](https://rclone.org/),
+  for obvious reasons. I've used v1.53.3 while writing the script. I haven't tested it on other versions.
+- [whiptail](https://linux.die.net/man/1/whiptail),
+  to draw the menus and dialog boxes.
+  It should come pre-installed with most linux distributions
+  (on some it's part of a package called newt). I've used v0.52.21 while writing the script. I haven't tested it on other versions.
