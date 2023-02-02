@@ -65,11 +65,12 @@ function remove_job() {
     [[ -f $log_file ]]        && files_to_remove+=("$log_file")
    
     local message=()
-    message+=("The following files will be permanently REMOVED:\n")
+    message+=("The following files will be permanently REMOVED: \n")
     local file
     for file in "${files_to_remove[@]}"; do
-        message+=("- $file\n")
+        message+=("- $file \n")
     done
+    message+=("\n" "WARNING: This operation is IRREVERSIBLE.") # two items so ask_for_confirmation draws the proper height
     ask_for_confirmation "${message[@]}" || return 0
 
     rm "${files_to_remove[@]}"
