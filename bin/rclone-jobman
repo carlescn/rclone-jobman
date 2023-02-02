@@ -99,10 +99,11 @@ function run_interactive() {
             last_sync=$(time_since_file_modified "$log_file")
             menu_entries+=("$index" "  Run job $job_name [last sync: $last_sync]")
         done
-        menu_entries+=("N" "  create New job.")   
-        menu_entries+=("E" "  Edit job.")
-        menu_entries+=("R" "  Remove job.")
-        menu_entries+=("L" "  read Log file.")
+        menu_entries+=(" " "") # Blank line to separete the jobs from the menu options
+        menu_entries+=("N" "  create New job")
+        menu_entries+=("E" "  Edit job")
+        menu_entries+=("R" "  Remove job")
+        menu_entries+=("L" "  read Log file")
 
         # Build the menu
         local menu_height=$(( "${#menu_entries[@]}" / 2))
@@ -121,6 +122,7 @@ function run_interactive() {
             E)          submenu edit_job   "EDIT JOB"   ;;
             R)          submenu remove_job "REMOVE JOB" ;;
             L)          submenu show_log   "SHOW LOG"   ;;
+            *)          continue  ;;
         esac
     done
 }
