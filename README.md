@@ -12,21 +12,23 @@
 that aims to simplify dealing with multyple sync jobs 
 with [Rclone](https://rclone.org/).
 
+![rclone-jobman main menu](screenshot.png)
+
 I first wrote it as a very simple script 
 for my specific necessities, 
 but later I thought it would be a good exercice 
 to try and make it more convenient for general use. 
 So I expanded it adding subscripts 
-for adding, editing and removing jobs.
+for adding, editing and removing jobs,
+and a simple user interface usin whiptail.
 
-For now, the rclone arguments are "hard-coded" 
+For now, the Rclone arguments are "hard-coded" 
 (I mean, this is a script after all...) 
-for the way I use rclone. 
+for the way I use Rclone. 
 I may change this in the future 
 and make the arguments job-specific, 
 saving them on the [job file](#job-files) instead.
 
-![rclone-jobman main menu](screenshot.png)
 
 ## Usage
 
