@@ -97,19 +97,19 @@ function run_interactive() {
             job_name=$(read_job_file_line "$job_file" job_name)
             log_file="$conf_path/log/$(basename "$job_file").log"
             last_sync=$(time_since_file_modified "$log_file")
-            menu_entries+=("$index" "$job_name [last sync: $last_sync]")
+            menu_entries+=("$index" "  Run job $job_name [last sync: $last_sync]")
         done
-        menu_entries+=("New"    "Create new job.")
-        menu_entries+=("Edit"   "Edit job.")
-        menu_entries+=("Remove" "Remove job.")
-        menu_entries+=("Log"    "Read log file.")
+        menu_entries+=("N" "  create New job.")   
+        menu_entries+=("E" "  Edit job.")
+        menu_entries+=("R" "  Remove job.")
+        menu_entries+=("L" "  read Log file.")
 
         # Build the menu
         local menu_height=$(( "${#menu_entries[@]}" / 2))
         local box_height=$(( 8 + "$menu_height"))
         local menu_out
         menu_out=$(whiptail --backtitle "$script_name" --title "MAIN MENU" \
-            --menu "Choose a job to run, or one of the options below:" \
+            --menu "Choose one option:" \
             "$box_height" "$box_width" "$menu_height" "${menu_entries[@]}" --cancel-button "Exit"\
             3>&1 1>&2 2>&3) || exit 0  # Cancel button returns 1 and makes the cript exit with non-zero code
         
@@ -117,10 +117,10 @@ function run_interactive() {
         [[ -z "$menu_out" ]] && exit 4  # Should not happen (already have returned 0 if user pressed Cancel)
         case "$menu_out" in
             [0-$index]) call_rclone "$(realpath "${files_array[$menu_out]}")" || continue;;
-            New)    create_new_job  || continue     ;;
-            Edit)   submenu edit_job   "EDIT JOB"   ;;
-            Remove) submenu remove_job "REMOVE JOB" ;;
-            Log)    submenu show_log   "SHOW LOG"   ;;
+            N)          create_new_job  || continue     ;;
+            E)          submenu edit_job   "EDIT JOB"   ;;
+            R)          submenu remove_job "REMOVE JOB" ;;
+            L)          submenu show_log   "SHOW LOG"   ;;
         esac
     done
 }

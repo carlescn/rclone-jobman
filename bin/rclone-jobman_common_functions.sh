@@ -51,7 +51,7 @@ function ask_for_confirmation() {
 # Asks user for confirmation. Returns 1 if response is NO.
     local IFS=; local message="$*"
     local box_height=$(( 6 + $# ))
-    local title="This operation is IRREVERSIBLE. Are you sure?"
+    local title="Please confirm"
     if whiptail --backtitle "${script_name:?}" --title "$title" --yesno "$message" "$box_height" "${box_width:?}" --defaultno; then
         return 0
     else
