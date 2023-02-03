@@ -9,18 +9,18 @@
 ## About
 
 **rclone-jobman** is a "job manager"
-that aims to simplify dealing with multyple sync jobs
+that aims to simplify dealing with multiple sync jobs
 with [Rclone](https://rclone.org/).
 
 ![rclone-jobman main menu](screenshot.png)
 
 I first wrote it as a very simple script
 for my specific necessities,
-but later I thought it would be a good exercice
+but later I thought it would be a good exercise
 to try and make it more convenient for general use.
 So I expanded it adding subscripts
 for adding, editing and removing jobs,
-and a simple user interface usin whiptail.
+and a simple user interface using whiptail.
 
 For now, the Rclone arguments are "hard-coded"
 (I mean, this is a script after all...)
@@ -112,7 +112,7 @@ and creates the necessary subdirectories under .config.
 
 ## Dependencies
 
-I've written the script on Bash v5.1, but should work on v4.0. It depens in some preinstalled software:
+I've written the script on Bash v5.1, but should work on v4.0. It depends in some preinstalled software:
 
 - [rclone](https://rclone.org/),
   for obvious reasons. I've used v1.53.3 while writing the script. I haven't tested it on other versions.
