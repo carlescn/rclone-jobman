@@ -43,10 +43,10 @@ function edit_job() {
     local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
 
     local message="Open file $job_file to edit it?"
-    yes_no_dialog "$message" && /usr/bin/env editor "$job_file"
+    yes_no_dialog "$message" && $EDITOR "$job_file"
 
     message="Open file $filterfrom_file to edit it?"
-    yes_no_dialog "$message"  && /usr/bin/env editor "$filterfrom_file"
+    yes_no_dialog "$message"  && $EDITOR "$filterfrom_file"
 
     message_box "Finished editting job $job_basename!"
 }

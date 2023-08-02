@@ -84,7 +84,7 @@ function create_new_job() {
     } > "$filterfrom_file"
     local message2="Open file $filterfrom_file to edit it?"
     yes_no_dialog "$message2" || return 0
-    /usr/bin/env editor "$filterfrom_file"
+    $EDITOR "$filterfrom_file"
 
     message_box "Finished creating job $job_basename!"
 }
