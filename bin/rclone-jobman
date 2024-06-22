@@ -57,7 +57,7 @@ function call_rclone() {
     [[ "$dry_run" == "TRUE" ]] && echo "INFO: --dry-run is set. This will NOT make any real changes."
     echo ""
     # Display a notification
-    DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting sync $job_name"
+    notify-send "Starting sync $job_name"
 
     # Set the rclone parameters                            # Params description:
     local rclone_params=(sync)                             # makes destination identic to source
