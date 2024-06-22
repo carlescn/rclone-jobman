@@ -1,9 +1,0 @@
-# Descriptive name for the sync job
-job_name="This job is an example"
-
-# For testing purposes, set to TRUE and rclone will NOT write anything to the remote server.
-dry_run=FALSE
-
-# Paths for source (READ) and destination (WRITE)
-source_path=/path/to/source
-destination_path=rclone_remote_name:/path/to/destination/

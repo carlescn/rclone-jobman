@@ -1,0 +1,28 @@
+[task]
+# Descriptive name for the sync job
+name = "This is an example"
+
+# Controls the --dry-run option for rclone
+# If set, rclone will NOT write anything to the remote server
+# Use it for testing after changing paths or filters
+dry_run = true
+
+[paths]
+# Paths for source (READ) and destination (WRITE) directories
+source      = "/path/to/source"
+destination = "rclone_remote_name:/path/to/destination/"
+
+[filter]
+# Set filter rules here
+# Each string in this array will added to the rclone arguments as '--filter string'
+# (see https://rclone.org/filtering/#filter-add-a-file-filtering-rule)
+rules = [
+  # some sample filter rules
+  "- secret*",
+  "+ *.jpg",
+  "+ file.txt",
+  "- /dir/Trash/**",
+  "+ /dir/**",
+  # exclude everything else
+  "- *",
+]

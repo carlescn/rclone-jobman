@@ -1,11 +1,11 @@
-###################################################################
-# Description : For use with rclone-jobman. This is an example
-#               anacrontab file for launching a job automatically.
-#               See anacron and anacrontab docs for details.
-# Author      : CarlesCN
-# E-mail      : carlesbioinformatics@gmail.com
-# License     : GNU General Public License v3.0
-###################################################################
+###############################################################################
+# For use with rclone-tasks.
+# This is an example anacrontab file for launching a job automatically.
+#
+# Author: CarlesCN
+# E-mail: carlesbioinformatics@gmail.com
+# License: GNU General Public License v3.0
+###############################################################################
 
 SHELL=/bin/bash
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:/home/USERNAME/.local/bin"
@@ -18,5 +18,5 @@ START_HOURS_RANGE=0-24
 
 #period	delay	job-identifier		command
 #(days)	(min)
-1		5		backup.home_daily	rclone-jobman home_daily
-7		10		backup.data_weekly	rclone-jobman data_weekly
+1		5		backup.home_daily	rclone-tasks /path/to/home_daily.toml
+7		10		backup.data_weekly	rclone-tasks /path/to/data_weekly.toml
