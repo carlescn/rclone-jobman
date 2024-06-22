@@ -13,13 +13,13 @@ function submenu() {
     local files_array job_file job_name index
     while true; do
         # Get all the files in the jobs folder
-        mapfile -t files_array < <(ls -d "${conf_path:?}"/jobs/*)
+        mapfile -t files_array < <(ls -d "$TASKS_DIR"/*)
         
         # Set the menu entries
         local menu_entries=()
         for index in "${!files_array[@]}"; do
             job_file="${files_array[$index]}"
-            job_name=$(read_job_file_line "$job_file" job_name)
+            job_name=$(get_value_from_file "$job_file" name)
             menu_entries+=("$index" "$job_name")
         done
 
@@ -27,8 +27,8 @@ function submenu() {
         local menu_height="${#files_array[@]}"
         local box_height=$(( 8 + "$menu_height"))
         local menu_out
-        menu_out=$(whiptail --backtitle "${script_name:?}" --title "$name_function" \
-            --menu "Choose a job:" "$box_height" "${box_width:?}" "$menu_height" "${menu_entries[@]}" \
+        menu_out=$(whiptail --backtitle "${SCRIPT_NAME:?}" --title "$name_function" \
+            --menu "Choose a job:" "$box_height" "${BOX_WIDTH:?}" "$menu_height" "${menu_entries[@]}" \
             3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this cript exit with non-zero code
         
         # Manage the output
@@ -39,8 +39,10 @@ function submenu() {
 
 function edit_job() {
     local job_file=$1
-    local job_basename; job_basename=$(basename "$job_file");           exit_if_file_missing "$job_file"
-    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"; exit_if_file_missing "$filterfrom_file"
+    local job_basename; job_basename=$(basename "$job_file")
+    local filterfrom_file; filterfrom_file="$(get_value_from_file "$job_file" filterfrom_file)"
+    exit_if_file_missing "$job_file"
+    exit_if_file_missing "$filterfrom_file"
 
     local message="Open file $job_file to edit it?"
     yes_no_dialog "$message" && $EDITOR "$job_file"
@@ -54,9 +56,9 @@ function edit_job() {
 function remove_job() {
     local job_file=$1
     local job_basename; job_basename=$(basename "$job_file")
-    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter"
-    local lock_file="$conf_path/lock/$job_basename.lock"
-    local log_file="$conf_path/log/$job_basename.log"
+    local filterfrom_file; filterfrom_file="$(get_value_from_file "$job_file" filterfrom_file)"
+    local lock_file="$LOCK_DIR/$job_basename.lock"
+    local log_file="$LOG_DIR/$job_basename.log"
 
     local files_to_remove=()
     [[ -f $job_file ]]        && files_to_remove+=("$job_file")
@@ -80,10 +82,10 @@ function remove_job() {
 
 function show_log() {
     local job_file=$1
-    local log_file; log_file="$conf_path/log/$(basename "$job_file").log"
+    local log_file; log_file="$LOG_DIR/$(basename "$job_file").log"
     if [[ -f $log_file ]]; then
         # shellcheck disable=SC2046  # $(stty size) outputs fullscreen height and width
-        whiptail --backtitle "${script_name:?}" --title "$log_file" --textbox "$log_file" $(stty size) --scrolltext
+        whiptail --backtitle "${SCRIPT_NAME:?}" --title "$log_file" --textbox "$log_file" $(stty size) --scrolltext
     else
         error_box "ERROR: Could not find file $log_file."
     fi

@@ -16,11 +16,11 @@ function prompt_if_file_exists() {
 }
 
 function read_input_text() {
-    local message; message=$1  # Declare and assign sparately because ShellCheck gets confused (SC2178)
+    local message; message=$1  # Declare and assign separately because ShellCheck gets confused (SC2178)
     local user_input
     while true; do
-        user_input=$(whiptail --backtitle "${script_name:?}" --title "NEW JOB" \
-            --inputbox "$message" 8 "${box_width:?}" \
+        user_input=$(whiptail --backtitle "${SCRIPT_NAME:?}" --title "NEW JOB" \
+            --inputbox "$message" 8 "${BOX_WIDTH:?}" \
             3>&1 1>&2 2>&3) || return 1  # Return 1 if user pressed Cancel.
         [[ -n $user_input ]] && echo "$user_input" && return 0
         message_box "The field can't be empty!" >&2
@@ -32,10 +32,10 @@ function create_new_job() {
 
     job_basename=$(read_input_text "(1/4) Please enter the new UNIQUE job name:") || return 1
 
-    local job_file="${conf_path:?}/jobs/$job_basename";
-    local filterfrom_file="$conf_path/filterfrom/$job_basename.filter";
-    local lock_file="$conf_path/lock/$job_basename.lock";
-    local log_file="$conf_path/log/$job_basename.log";
+    local job_file="$TASKS_DIR/$job_basename";
+    local filterfrom_file="$TASKS_DIR/$job_basename.filter";
+    local lock_file="$LOCK_DIR/$job_basename.lock";
+    local log_file="$LOG_DIR/$job_basename.log";
     prompt_if_file_exists "$job_file"        || return 2
     prompt_if_file_exists "$filterfrom_file" || return 2
     prompt_if_file_exists "$lock_file"       || return 2
@@ -46,7 +46,7 @@ function create_new_job() {
     destination_path=$(read_input_text "(4/4) Please enter the DESTINATION path (where to write to):") || return 1
     
     local dry_run_message="Dry-run is set to TRUE by default. You can set it to FALSE now or edit it later."
-    if whiptail --backtitle "${script_name:?}" --title "NEW JOB" --yesno "$dry_run_message" 10 "${box_width:?}" --defaultno --yes-button "TRUE" --no-button "FALSE"; then
+    if whiptail --backtitle "${SCRIPT_NAME:?}" --title "NEW JOB" --yesno "$dry_run_message" 10 "${BOX_WIDTH:?}" --defaultno --yes-button "TRUE" --no-button "FALSE"; then
         dry_run="TRUE"
     else
         dry_run="FALSE"
