@@ -23,8 +23,7 @@ BOX_WIDTH=100
 
 source "$RCLONETASKS_BIN_PATH/rclone-jobman_submenus.sh"
 source "$RCLONETASKS_BIN_PATH/rclone-jobman_newjob.sh"
-source "$RCLONETASKS_BIN_PATH/utils.sh"
-
+source "$RCLONETASKS_BIN_PATH/rclone-jobman_common_functions.sh"
 
 function call_rclone { # $1=task file
     /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-runner.sh $(realpath "$1")"
@@ -47,8 +46,9 @@ while true; do
     menu_entries=()
     for index in "${!files_array[@]}"; do
         task_file="${files_array[$index]}"
-        task_name=$(get_value_from_file "$task_file" name)
-        log_file="$RCLONETASKS_LOG_PATH/$(basename "$task_file").log"
+        task_name=$(yq -oy '.task.name' "$task_file")
+        base_name=$(basename "$task_file" .toml)
+        log_file="$RCLONETASKS_LOG_PATH/$base_name.log"
         last_sync=$(time_since_file_modified "$log_file")
         menu_entries+=("$index" "  Run task $task_name [last sync: $last_sync]")
     done

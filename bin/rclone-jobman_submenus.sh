@@ -19,7 +19,7 @@ function submenu() {
         local menu_entries=()
         for index in "${!files_array[@]}"; do
             job_file="${files_array[$index]}"
-            job_name=$(get_value_from_file "$job_file" name)
+            job_name=$(yq -oy '.task.name' "$job_file")
             menu_entries+=("$index" "$job_name")
         done
 
@@ -29,7 +29,7 @@ function submenu() {
         local menu_out
         menu_out=$(whiptail --backtitle "${SCRIPT_NAME:?}" --title "$name_function" \
             --menu "Choose a job:" "$box_height" "${BOX_WIDTH:?}" "$menu_height" "${menu_entries[@]}" \
-            3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this cript exit with non-zero code
+            3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this script exit with non-zero code
         
         # Manage the output
         [[ -z "$menu_out" ]] && return 1  # Should not happen (already have returned 0 if user pressed Cancel)
@@ -39,32 +39,25 @@ function submenu() {
 
 function edit_job() {
     local job_file=$1
-    local job_basename; job_basename=$(basename "$job_file")
-    local filterfrom_file; filterfrom_file="$(get_value_from_file "$job_file" filterfrom_file)"
+    local job_basename; job_basename=$(basename "$job_file" .toml)
     exit_if_file_missing "$job_file"
-    exit_if_file_missing "$filterfrom_file"
 
     local message="Open file $job_file to edit it?"
     yes_no_dialog "$message" && $EDITOR "$job_file"
 
-    message="Open file $filterfrom_file to edit it?"
-    yes_no_dialog "$message"  && $EDITOR "$filterfrom_file"
-
-    message_box "Finished editting job $job_basename!"
+    message_box "Finished editing job $job_basename!"
 }
 
 function remove_job() {
     local job_file=$1
-    local job_basename; job_basename=$(basename "$job_file")
-    local filterfrom_file; filterfrom_file="$(get_value_from_file "$job_file" filterfrom_file)"
+    local job_basename; job_basename=$(basename "$job_file" .toml)
     local lock_file="$RCLONETASKS_LOCK_PATH/$job_basename.lock"
     local log_file="$RCLONETASKS_LOG_PATH/$job_basename.log"
 
     local files_to_remove=()
-    [[ -f $job_file ]]        && files_to_remove+=("$job_file")
-    [[ -f $filterfrom_file ]] && files_to_remove+=("$filterfrom_file")
-    [[ -f $lock_file ]]       && files_to_remove+=("$lock_file")
-    [[ -f $log_file ]]        && files_to_remove+=("$log_file")
+    [[ -f $job_file ]]  && files_to_remove+=("$job_file")
+    [[ -f $lock_file ]] && files_to_remove+=("$lock_file")
+    [[ -f $log_file ]]  && files_to_remove+=("$log_file")
    
     local message=()
     message+=("The following files will be permanently REMOVED: \n")
@@ -82,9 +75,10 @@ function remove_job() {
 
 function show_log() {
     local job_file=$1
-    local log_file; log_file="$RCLONETASKS_LOG_PATH/$(basename "$job_file").log"
+    local base_name; base_name=$(basename "$job_file" .toml)
+    local log_file; log_file="$RCLONETASKS_LOG_PATH/$base_name.log"
     if [[ -f $log_file ]]; then
-        # shellcheck disable=SC2046  # $(stty size) outputs fullscreen height and width
+        # shellcheck disable=SC2046  # $(stty size) outputs full screen height and width
         whiptail --backtitle "${SCRIPT_NAME:?}" --title "$log_file" --textbox "$log_file" $(stty size) --scrolltext
     else
         error_box "ERROR: Could not find file $log_file."

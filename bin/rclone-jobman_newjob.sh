@@ -32,24 +32,22 @@ function create_new_job() {
 
     job_basename=$(read_input_text "(1/4) Please enter the new UNIQUE job name:") || return 1
 
-    local job_file="$RCLONETASKS_TASKS_PATH/$job_basename";
-    local filterfrom_file="$RCLONETASKS_TASKS_PATH/$job_basename.filter";
+    local job_file="$RCLONETASKS_TASKS_PATH/$job_basename.toml";
     local lock_file="$RCLONETASKS_LOCK_PATH/$job_basename.lock";
     local log_file="$RCLONETASKS_LOG_PATH/$job_basename.log";
-    prompt_if_file_exists "$job_file"        || return 2
-    prompt_if_file_exists "$filterfrom_file" || return 2
-    prompt_if_file_exists "$lock_file"       || return 2
-    prompt_if_file_exists "$log_file"        || return 2
+    prompt_if_file_exists "$job_file"  || return 2
+    prompt_if_file_exists "$lock_file" || return 2
+    prompt_if_file_exists "$log_file"  || return 2
 
     job_name=$(read_input_text "(2/4) Please enter a DESCRIPTIVE name:") || return 1
     source_path=$(read_input_text "(3/4) Please the SOURCE path (where to read from):") || return 1
     destination_path=$(read_input_text "(4/4) Please enter the DESTINATION path (where to write to):") || return 1
     
-    local dry_run_message="Dry-run is set to TRUE by default. You can set it to FALSE now or edit it later."
-    if whiptail --backtitle "${SCRIPT_NAME:?}" --title "NEW JOB" --yesno "$dry_run_message" 10 "${BOX_WIDTH:?}" --defaultno --yes-button "TRUE" --no-button "FALSE"; then
-        dry_run="TRUE"
+    local dry_run_message="Dry-run is set to TRUE by default. You can set it to FALSE now or edit the file later."
+    if whiptail --backtitle "${SCRIPT_NAME:?}" --title "NEW JOB" --yesno "$dry_run_message" 10 "${BOX_WIDTH:?}" --yes-button "TRUE" --no-button "FALSE"; then
+        dry_run=true
     else
-        dry_run="FALSE"
+        dry_run=false
     fi
 
     local message=()
@@ -62,13 +60,18 @@ function create_new_job() {
     ask_for_confirmation "${message[@]}"  || return 1
 
     # Write the $job_file
-    {   echo "# Descriptive name for the sync job"
-        echo "job_name=$job_name"
-        echo "# For testing purposes, set to TRUE and rclone will NOT write anything to the remote server."
-        echo "dry_run=$dry_run"
-        echo "# Paths for source (READ) and destination (WRITE)"
-        echo "source_path=$source_path"
-        echo "destination_path=$destination_path"
+    {   echo "[task]"
+        echo "name = \"$job_name\""
+        echo "dry_run = $dry_run"
+        echo ""
+        echo "[paths]"
+        echo "source      = \"$source_path\""
+        echo "destination = \"$destination_path\""
+        echo ""
+        echo "[filter]"
+        echo "# Check out https://rclone.org/filtering/#filter-add-a-file-filtering-rule for reference."
+        echo "#every string in this array will added to the rclone arguments as '--filter string'"
+        echo "rules = []"
     } > "$job_file"
 
     # Remove and recreate $lock_file to ensure proper ownership (user:group)
@@ -78,13 +81,8 @@ function create_new_job() {
     # Remove log file so menu says it has never been run.
     [[ -f "$log_file" ]] && rm "$log_file"
 
-    # Write the $filterfrom_file and open with default editor
-    {   echo "# This is the filter-from file for the job $job_file."
-        echo "# Check out https://rclone.org/filtering/#filter-from-read-filtering-patterns-from-a-file for reference."
-    } > "$filterfrom_file"
-    local message2="Open file $filterfrom_file to edit it?"
-    yes_no_dialog "$message2" || return 0
-    $EDITOR "$filterfrom_file"
+    yes_no_dialog "Open file $job_file to edit the filter rules?" || return 0
+    $EDITOR "$job_file"
 
     message_box "Finished creating job $job_basename!"
 }

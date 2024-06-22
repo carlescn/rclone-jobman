@@ -17,9 +17,6 @@
 set -euo pipefail
 
 
-source "$RCLONETASKS_BIN_PATH/utils.sh"
-
-
 # Parse arguments
 POSITIONAL_ARGS=()
 FORCE_DRY_RUN=false
@@ -62,20 +59,23 @@ if [ ! -d "$RCLONETASKS_LOG_PATH" ]; then mkdir -p "$RCLONETASKS_LOG_PATH"; fi
 if [ ! -d "$RCLONETASKS_LOCK_PATH" ]; then mkdir -p "$RCLONETASKS_LOCK_PATH"; fi
 
 
-# Read params from file
-BASENAME=$(basename "$TASK_FILE")
-TASK_NAME=$(get_value_from_file "$TASK_FILE" 'name')
-SOURCE_PATH=$(get_value_from_file "$TASK_FILE" 'source_path')
-DEST_PATH=$(get_value_from_file "$TASK_FILE" 'destination_path')
-FILTERFROM_FILE=$(get_value_from_file "$TASK_FILE" 'filterfrom_file')
+# Read task params from file
+BASENAME=$(basename "$TASK_FILE" .toml)
+TASK_NAME=$(yq -oy '.task.name' "$TASK_FILE")
+SOURCE_PATH=$(yq -oy '.paths.source' "$TASK_FILE")
+DEST_PATH=$(yq -oy '.paths.destination' "$TASK_FILE")
 
-DRY_RUN=$(get_value_from_file "$TASK_FILE" dry_run)
-if [ "$DRY_RUN" == "FALSE" ]; then DRY_RUN=false; else DRY_RUN=true; fi
+mapfile -t FILTER_RULES < <(yq -oy '.filter.rules[]' "$TASK_FILE")
+
+DRY_RUN=$(yq -oy '.task.dry_run' "$TASK_FILE")
+if [ "$DRY_RUN" != false ]; then DRY_RUN=true; fi # default to true if not a boolean
 if $FORCE_DRY_RUN; then DRY_RUN=true; fi
+
 
 # Set some file paths
 LOCK_FILE="$RCLONETASKS_LOCK_PATH/$BASENAME.lock"
 LOG_FILE="$RCLONETASKS_LOG_PATH/$BASENAME.log"
+
 
 # Remove last log file to keep its size manageable
 if [ -f "$LOG_FILE" ]; then rm "$LOG_FILE"; fi
@@ -107,7 +107,9 @@ RCLONE_ARGS+=(--log-level INFO)
 ## save log to file
 RCLONE_ARGS+=(--log-file "$LOG_FILE")
 ## filter files as in filter-from file
-RCLONE_ARGS+=(--filter-from "$FILTERFROM_FILE")
+for rule in "${FILTER_RULES[@]}"; do
+    RCLONE_ARGS+=(--filter "$rule")
+done
 ## show progress
 RCLONE_ARGS+=(--progress)
 ## store local symlinks as text files '*.rclonelink' in remote server
@@ -127,7 +129,6 @@ RCLONE_ARGS+=(--delete-after)
 RCLONE_ARGS+=("$SOURCE_PATH")
 ## Destination path
 RCLONE_ARGS+=("$DEST_PATH")
-
 
 # Call rclone using flock to prevent re-running a task that is already running
 flock -n "$LOCK_FILE" rclone "${RCLONE_ARGS[@]}"
