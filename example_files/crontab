@@ -1,0 +1,13 @@
+###################################################################
+# Description : For use with rclone-jobman. This is an example
+#               for automating executions using your local crontab.
+#               Use 'crontab -e' as a user to modify its crontab.
+# Author      : CarlesCN
+# E-mail      : carlesbioinformatics@gmail.com
+# License     : GNU General Public License v3.0
+###################################################################
+
+# job_file is the filename located in $HOME/.config/rclone-jobman/jobs/ for the desired job
+0 * * * * /full/path/to/rclone-jobman job_file # every hour o'clock
+0 3 * * * /full/path/to/rclone-jobman job_file # every day at 03:00
+@hourly /full/path/to/rclone-jobman job_file # also every hour
