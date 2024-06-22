@@ -5,11 +5,11 @@
 # Description : Simple sync-job manager for rclone.
 # Args        : [None]
 #                 Runs interactively with a simple text menu.
-#                 It load the available jobs from the files in 
+#                 It load the available jobs from the files in
 #                 ~/.config/rclone-jobman/jobs
 #               [job_file_name]
 #                 The file must exist in ~/.config/rclone-jobman/jobs.
-#                 It runs the corresponding job withou asking for user input
+#                 It runs the corresponding job without asking for user input
 #                 (intended for automation).
 # Author      : CarlesCN
 # E-mail      : carlesbioinformatics@gmail.com
@@ -59,20 +59,42 @@ function call_rclone() {
     # Display a notification
     notify-send "Starting sync $job_name"
 
-    # Set the rclone parameters                            # Params description:
-    local rclone_params=(sync)                             # makes destination identic to source
-    rclone_params+=(--config "$config_file")               # read config from $config_file.
-    rclone_params+=(--log-level INFO)                      # INFO: prints everything but debug events. DEBUG: prints ALL events.
-    rclone_params+=(--log-file "$log_file")                # save log to $log_file.
-    rclone_params+=(--filter-from "$filterfrom_file")      # filter files as in $filterfrom_file.
-    rclone_params+=(--progress)                            # show progress.
-    rclone_params+=(--links)                               # store local symlinks as text files '.rclonelink' in remote server.
-    rclone_params+=(--track-renames)                       # moved files will be moved remotely server-side (instead of deleted and reuploaded)
-    [[ "$dry_run" == TRUE ]] && rclone_params+=(--dry-run) # rclone will NOT actually write to destination. This is controlled by the "dry_run=" line in the job config file.
+    # Set the rclone parameters
+    ## makes destination identic to source
+    local rclone_params=(sync)
+    ## read config from $config_file
+    rclone_params+=(--config "$config_file")
+    ## set log level
+    ## INFO: prints everything but debug events
+    ## DEBUG: prints ALL events
+    rclone_params+=(--log-level INFO)
+    ## save log to $log_file
+    rclone_params+=(--log-file "$log_file")
+    ## filter files as in $filterfrom_file
+    rclone_params+=(--filter-from "$filterfrom_file")
+    ## show progress
+    rclone_params+=(--progress)
+    ## store local symlinks as text files '.rclonelink' in remote server
+    rclone_params+=(--links)
+    ## deletes files after copying is finallized
+    rclone_params+=(--delete-after)
+    ## remove all non-tracked files (BE CAUTIOUS!)
+    # rclone_params+=(--delete-excluded)
+    ## moved files will be moved remotely server-side, instead of deleted and reuploaded
+    ## (can be slow, doesn't work with encryption)
+    # rclone_params+=(--track-renames)
+    ## speed up by increasing the number of simultaneous tranfers
+    # rclone_params+=(--transfers 10)
+    ## speed up by increasing the number of simultaneous checkers
+    # rclone_params+=(--checkers 20)
+    ## dry run: rclone will NOT actually write to destination.
+    ## This is controlled by the "dry_run=" line in the job config file
+    [[ "$dry_run" == TRUE ]] && rclone_params+=(--dry-run)
     rclone_params+=("$source_path")
     rclone_params+=("$destination_path")
 
-    # Call rclone using flock (it will prevent from calling rclone if the job is already running, i.e. $lock_file exists).
+    # Call rclone using flock
+    # (it will prevent from calling rclone if the job is already running, i.e. $lock_file exists)
     flock -n "$lock_file" rclone "${rclone_params[@]}"
 }
 
@@ -89,7 +111,7 @@ function run_interactive() {
     while true; do
         # Get all the files in the jobs folder
         mapfile -t files_array < <(ls -d "$conf_path"/jobs/*)
-        
+
         # Set the menu entries
         local menu_entries=()
         for index in "${!files_array[@]}"; do
@@ -113,7 +135,7 @@ function run_interactive() {
             --menu "Choose one option:" \
             "$box_height" "$box_width" "$menu_height" "${menu_entries[@]}" --cancel-button "Exit"\
             3>&1 1>&2 2>&3) || exit 0  # Cancel button returns 1 and makes the cript exit with non-zero code
-        
+
         # Manage the output
         [[ -z "$menu_out" ]] && exit 4  # Should not happen (already have returned 0 if user pressed Cancel)
         case "$menu_out" in
