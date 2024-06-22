@@ -4,13 +4,12 @@
 # Script Name : rclone-jobman
 # Description : Simple sync-job manager for rclone.
 # Args        : [None]
-#                 Runs interactively with a simple text menu.
-#                 It load the available jobs from the files in
-#                 ~/.config/rclone-jobman/jobs
+#                 Runs interactively with a simple TUI.
+#                 It loads the available tasks from the files in
+#                 $RCLONETASKS_TASKS_PATH (set below).
 #               [job_file_name]
-#                 The file must exist in ~/.config/rclone-jobman/jobs.
-#                 It runs the corresponding job without asking for user input
-#                 (intended for automation).
+#                 It runs a task defined by the passed file,
+#                 without asking for user input.
 # Author      : CarlesCN
 # E-mail      : carlesbioinformatics@gmail.com
 # License     : GNU General Public License v3.0
@@ -21,11 +20,24 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# Set some paths and export variables
+RCLONETASKS_BIN_PATH="$(dirname "$(realpath "$0")")"
+RCLONETASKS_TASKS_PATH="$HOME/.config/rclone-jobman/jobs"
+RCLONETASKS_LOG_PATH="$HOME/.config/rclone-jobman/log"
+RCLONETASKS_LOCK_PATH="$HOME/.config/rclone-jobman/lock"
+RCLONETASKS_RCLONE_CONFIG_FILE="$HOME/.config/rclone/rclone.conf"
+
+export RCLONETASKS_BIN_PATH
+export RCLONETASKS_TASKS_PATH
+export RCLONETASKS_LOG_PATH
+export RCLONETASKS_LOCK_PATH
+export RCLONETASKS_RCLONE_CONFIG_FILE
+
 
 # If some arguments, launch runner. If no arguments, launch TUI
 if [ $# -gt 0 ]; then
-    /usr/bin/env bash -c "$SCRIPT_DIR/rclone-tasks-runner.sh $*"
+    /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-runner.sh $*"
 else
-    /usr/bin/env bash -c "$SCRIPT_DIR/rclone-tasks-tui.sh"
+    /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-tui.sh"
 fi

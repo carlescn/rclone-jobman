@@ -2,7 +2,8 @@
 
 ###################################################################
 # Script Name : rclone-tasks-tui.sh
-# Description : Simple task manager for rclone running syncs.
+# Description : This script it's not intended to be run by itself,
+#               if should be called by rclone-jobman.
 #               This script opens a simple TUI to run and manage tasks.
 # Args        : [None]
 # Author      : CarlesCN
@@ -15,23 +16,18 @@
 # -o pipefail script ends if piped command fails
 set -euo pipefail
 
-# Set some paths
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-LOG_DIR="$HOME/.config/rclone-jobman/log"
-LOCK_DIR="$HOME/.config/rclone-jobman/lock"
-TASKS_DIR="$HOME/.config/rclone-jobman/jobs"
 
 # Set some constants
 SCRIPT_NAME='rclone-jobman'
 BOX_WIDTH=100
 
-source "$SCRIPT_DIR/rclone-jobman_submenus.sh"
-source "$SCRIPT_DIR/rclone-jobman_newjob.sh"
-source "$SCRIPT_DIR/utils.sh"
+source "$RCLONETASKS_BIN_PATH/rclone-jobman_submenus.sh"
+source "$RCLONETASKS_BIN_PATH/rclone-jobman_newjob.sh"
+source "$RCLONETASKS_BIN_PATH/utils.sh"
 
 
 function call_rclone { # $1=task file
-    /usr/bin/env bash -c "$SCRIPT_DIR/rclone-tasks-runner.sh $(realpath "$1")"
+    /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-runner.sh $(realpath "$1")"
 }
 
 
@@ -45,14 +41,14 @@ function time_since_file_modified {
 
 while true; do
     # Get all the files in the jobs folder
-    mapfile -t files_array < <(ls -d "$TASKS_DIR"/*)
+    mapfile -t files_array < <(ls -d "$RCLONETASKS_TASKS_PATH"/*)
 
     # Set the menu entries
     menu_entries=()
     for index in "${!files_array[@]}"; do
         task_file="${files_array[$index]}"
         task_name=$(get_value_from_file "$task_file" name)
-        log_file="$LOG_DIR/$(basename "$task_file").log"
+        log_file="$RCLONETASKS_LOG_PATH/$(basename "$task_file").log"
         last_sync=$(time_since_file_modified "$log_file")
         menu_entries+=("$index" "  Run task $task_name [last sync: $last_sync]")
     done

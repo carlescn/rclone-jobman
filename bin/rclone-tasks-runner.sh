@@ -2,7 +2,8 @@
 
 ###################################################################
 # Script Name : rclone-tasks-run.sh
-# Description : Simple task manager for rclone running syncs.
+# Description : This script it's not intended to be run by itself,
+#               if should be called by rclone-jobman.
 #               This script runs a single task, taking the parameters from a file.
 # Args        : task_config_file: the path to a file containing the task description
 # Author      : CarlesCN
@@ -16,13 +17,7 @@
 set -euo pipefail
 
 
-# Set some paths
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-LOG_DIR="$HOME/.config/rclone-jobman/log"
-LOCK_DIR="$HOME/.config/rclone-jobman/lock"
-RCLONE_CONFIG_PATH="$HOME/.config/rclone/rclone.conf"
-
-source "$SCRIPT_DIR/utils.sh"
+source "$RCLONETASKS_BIN_PATH/utils.sh"
 
 
 # Parse arguments
@@ -58,13 +53,13 @@ if [ ! -f "$TASK_FILE" ]; then
     exit 1
 fi
 
-if [ ! -f "$RCLONE_CONFIG_PATH" ]; then
-    echo "Could not find rclone configuration file: '$RCLONE_CONFIG_PATH'"
+if [ ! -f "$RCLONETASKS_RCLONE_CONFIG_FILE" ]; then
+    echo "Could not find rclone configuration file: '$RCLONETASKS_RCLONE_CONFIG_FILE'"
     exit 1
 fi
 
-if [ ! -d "$LOG_DIR" ]; then mkdir -p "$LOG_DIR"; fi
-if [ ! -d "$LOCK_DIR" ]; then mkdir -p "$LOCK_DIR"; fi
+if [ ! -d "$RCLONETASKS_LOG_PATH" ]; then mkdir -p "$RCLONETASKS_LOG_PATH"; fi
+if [ ! -d "$RCLONETASKS_LOCK_PATH" ]; then mkdir -p "$RCLONETASKS_LOCK_PATH"; fi
 
 
 # Read params from file
@@ -79,8 +74,8 @@ if [ "$DRY_RUN" == "FALSE" ]; then DRY_RUN=false; else DRY_RUN=true; fi
 if $FORCE_DRY_RUN; then DRY_RUN=true; fi
 
 # Set some file paths
-LOCK_FILE="$LOCK_DIR/$BASENAME.lock"
-LOG_FILE="$LOG_DIR/$BASENAME.log"
+LOCK_FILE="$RCLONETASKS_LOCK_PATH/$BASENAME.lock"
+LOG_FILE="$RCLONETASKS_LOG_PATH/$BASENAME.log"
 
 # Remove last log file to keep its size manageable
 if [ -f "$LOG_FILE" ]; then rm "$LOG_FILE"; fi
@@ -103,8 +98,8 @@ RCLONE_ARGS=(sync)
 ## dry run: rclone will NOT actually write to destination.
 ## This is controlled by the "DRY_RUN=" line in the task config file
 if $DRY_RUN; then RCLONE_ARGS+=(--dry-run); fi
-## read config from $RCLONE_CONFIG_PATH
-RCLONE_ARGS+=(--config "$RCLONE_CONFIG_PATH")
+## read config from $RCLONETASKS_RCLONE_CONFIG_FILE
+RCLONE_ARGS+=(--config "$RCLONETASKS_RCLONE_CONFIG_FILE")
 ## set log level
 ## INFO: prints everything but debug events
 ## DEBUG: prints ALL events

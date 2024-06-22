@@ -13,7 +13,7 @@ function submenu() {
     local files_array job_file job_name index
     while true; do
         # Get all the files in the jobs folder
-        mapfile -t files_array < <(ls -d "$TASKS_DIR"/*)
+        mapfile -t files_array < <(ls -d "$RCLONETASKS_TASKS_PATH"/*)
         
         # Set the menu entries
         local menu_entries=()
@@ -57,8 +57,8 @@ function remove_job() {
     local job_file=$1
     local job_basename; job_basename=$(basename "$job_file")
     local filterfrom_file; filterfrom_file="$(get_value_from_file "$job_file" filterfrom_file)"
-    local lock_file="$LOCK_DIR/$job_basename.lock"
-    local log_file="$LOG_DIR/$job_basename.log"
+    local lock_file="$RCLONETASKS_LOCK_PATH/$job_basename.lock"
+    local log_file="$RCLONETASKS_LOG_PATH/$job_basename.log"
 
     local files_to_remove=()
     [[ -f $job_file ]]        && files_to_remove+=("$job_file")
@@ -82,7 +82,7 @@ function remove_job() {
 
 function show_log() {
     local job_file=$1
-    local log_file; log_file="$LOG_DIR/$(basename "$job_file").log"
+    local log_file; log_file="$RCLONETASKS_LOG_PATH/$(basename "$job_file").log"
     if [[ -f $log_file ]]; then
         # shellcheck disable=SC2046  # $(stty size) outputs fullscreen height and width
         whiptail --backtitle "${SCRIPT_NAME:?}" --title "$log_file" --textbox "$log_file" $(stty size) --scrolltext

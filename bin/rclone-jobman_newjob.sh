@@ -32,10 +32,10 @@ function create_new_job() {
 
     job_basename=$(read_input_text "(1/4) Please enter the new UNIQUE job name:") || return 1
 
-    local job_file="$TASKS_DIR/$job_basename";
-    local filterfrom_file="$TASKS_DIR/$job_basename.filter";
-    local lock_file="$LOCK_DIR/$job_basename.lock";
-    local log_file="$LOG_DIR/$job_basename.log";
+    local job_file="$RCLONETASKS_TASKS_PATH/$job_basename";
+    local filterfrom_file="$RCLONETASKS_TASKS_PATH/$job_basename.filter";
+    local lock_file="$RCLONETASKS_LOCK_PATH/$job_basename.lock";
+    local log_file="$RCLONETASKS_LOG_PATH/$job_basename.log";
     prompt_if_file_exists "$job_file"        || return 2
     prompt_if_file_exists "$filterfrom_file" || return 2
     prompt_if_file_exists "$lock_file"       || return 2
