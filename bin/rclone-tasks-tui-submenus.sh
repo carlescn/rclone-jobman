@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 
-###################################################################
-# Library Name : rclone-jobman.sh
-# Description  : This library is part of rclone-jobman.
-#                It contains functions to run the submenus options.
-#                See main script for author, license and contact info.
-###################################################################
+###############################################################################
+# [rclone-tasks-tui-submenus.sh]
+# This library is part of rclone-tasks TUI.
+# It contains the logic to run the submenus options.
+# See main script for author, license and contact info.
+###############################################################################
 
 function submenu() {
     local call_function=$1
     local name_function=$2
-    local files_array job_file job_name index
+    local files_array task_file task_name index
     while true; do
-        # Get all the files in the jobs folder
+        # Get all the files in tasks folder
         mapfile -t files_array < <(ls -d "$RCLONETASKS_TASKS_PATH"/*)
         
         # Set the menu entries
         local menu_entries=()
         for index in "${!files_array[@]}"; do
-            job_file="${files_array[$index]}"
-            job_name=$(yq -oy '.task.name' "$job_file")
-            menu_entries+=("$index" "$job_name")
+            task_file="${files_array[$index]}"
+            task_name=$(yq -oy '.task.name' "$task_file")
+            menu_entries+=("$index" "$task_name")
         done
 
         # Build the menu
@@ -28,7 +28,7 @@ function submenu() {
         local box_height=$(( 8 + "$menu_height"))
         local menu_out
         menu_out=$(whiptail --backtitle "${SCRIPT_NAME:?}" --title "$name_function" \
-            --menu "Choose a job:" "$box_height" "${BOX_WIDTH:?}" "$menu_height" "${menu_entries[@]}" \
+            --menu "Choose a task:" "$box_height" "${BOX_WIDTH:?}" "$menu_height" "${menu_entries[@]}" \
             3>&1 1>&2 2>&3) || return 0  # Cancel button returns 1 and makes this script exit with non-zero code
         
         # Manage the output
@@ -37,25 +37,25 @@ function submenu() {
     done
 }
 
-function edit_job() {
-    local job_file=$1
-    local job_basename; job_basename=$(basename "$job_file" .toml)
-    exit_if_file_missing "$job_file"
+function edit_task() {
+    local task_file=$1
+    local task_basename; task_basename=$(basename "$task_file" .toml)
+    exit_if_file_missing "$task_file"
 
-    local message="Open file $job_file to edit it?"
-    yes_no_dialog "$message" && $EDITOR "$job_file"
+    local message="Open file $task_file to edit it?"
+    yes_no_dialog "$message" && $EDITOR "$task_file"
 
-    message_box "Finished editing job $job_basename!"
+    message_box "Finished editing task $task_basename!"
 }
 
-function remove_job() {
-    local job_file=$1
-    local job_basename; job_basename=$(basename "$job_file" .toml)
-    local lock_file="$RCLONETASKS_LOCK_PATH/$job_basename.lock"
-    local log_file="$RCLONETASKS_LOG_PATH/$job_basename.log"
+function remove_task() {
+    local task_file=$1
+    local task_basename; task_basename=$(basename "$task_file" .toml)
+    local lock_file="$RCLONETASKS_LOCK_PATH/$task_basename.lock"
+    local log_file="$RCLONETASKS_LOG_PATH/$task_basename.log"
 
     local files_to_remove=()
-    [[ -f $job_file ]]  && files_to_remove+=("$job_file")
+    [[ -f $task_file ]]  && files_to_remove+=("$task_file")
     [[ -f $lock_file ]] && files_to_remove+=("$lock_file")
     [[ -f $log_file ]]  && files_to_remove+=("$log_file")
    
@@ -70,12 +70,12 @@ function remove_job() {
 
     rm "${files_to_remove[@]}"
 
-    message_box "Job $job_basename removed!"
+    message_box "Task $task_basename removed!"
 }
 
 function show_log() {
-    local job_file=$1
-    local base_name; base_name=$(basename "$job_file" .toml)
+    local task_file=$1
+    local base_name; base_name=$(basename "$task_file" .toml)
     local log_file; log_file="$RCLONETASKS_LOG_PATH/$base_name.log"
     if [[ -f $log_file ]]; then
         # shellcheck disable=SC2046  # $(stty size) outputs full screen height and width

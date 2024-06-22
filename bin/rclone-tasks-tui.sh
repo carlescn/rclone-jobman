@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
-###################################################################
-# Script Name : rclone-tasks-tui.sh
-# Description : This script it's not intended to be run by itself,
-#               if should be called by rclone-jobman.
-#               This script opens a simple TUI to run and manage tasks.
-# Args        : [None]
-# Author      : CarlesCN
-# E-mail      : carlesbioinformatics@gmail.com
-# License     : GNU General Public License v3.0
-###################################################################
+###############################################################################
+# [rclone-tasks-tui.sh]
+# This script is part of rclone-tasks.
+# It's not intended to be run by itself, it should be called by rclone-tasks.
+# It shows a simple TUI to run and manage tasks.
+# Arguments: (None)
+#
+# Author: CarlesCN
+# E-mail: carlesbioinformatics@gmail.com
+# License: GNU General Public License v3.0
+###############################################################################
 
 # -e script ends on error (exit != 0)
 # -u error if undefined variable
@@ -18,12 +19,12 @@ set -euo pipefail
 
 
 # Set some constants
-SCRIPT_NAME='rclone-jobman'
+SCRIPT_NAME='rclone-tasks'
 BOX_WIDTH=100
 
-source "$RCLONETASKS_BIN_PATH/rclone-jobman_submenus.sh"
-source "$RCLONETASKS_BIN_PATH/rclone-jobman_newjob.sh"
-source "$RCLONETASKS_BIN_PATH/rclone-jobman_common_functions.sh"
+source "$RCLONETASKS_BIN_PATH/rclone-tasks-tui-submenus.sh"
+source "$RCLONETASKS_BIN_PATH/rclone-tasks-tui-newtask.sh"
+source "$RCLONETASKS_BIN_PATH/rclone-tasks-tui-common.sh"
 
 function call_rclone { # $1=task file
     /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-runner.sh $(realpath "$1")"
@@ -39,7 +40,7 @@ function time_since_file_modified {
 
 
 while true; do
-    # Get all the files in the jobs folder
+    # Get all the files in tasks folder
     mapfile -t files_array < <(ls -d "$RCLONETASKS_TASKS_PATH"/*)
 
     # Set the menu entries
@@ -70,10 +71,10 @@ while true; do
     [[ -z "$menu_out" ]] && exit 4  # Should not happen (already have returned 0 if user pressed Cancel)
     case "$menu_out" in
         [0-$index]) call_rclone "${files_array[$menu_out]}" || continue;;
-        N)          create_new_job || continue ;;
-        E)          submenu edit_job   "EDIT TASK"   ;;
-        R)          submenu remove_job "REMOVE TASK" ;;
-        L)          submenu show_log   "SHOW LOG"   ;;
+        N)          create_new_task || continue ;;
+        E)          submenu edit_task   "EDIT TASK"   ;;
+        R)          submenu remove_task "REMOVE TASK" ;;
+        L)          submenu show_log    "SHOW LOG"   ;;
         *)          continue  ;;
     esac
 done

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+###############################################################################
+# [rclone-tasks]
+# Simple task manager for rclone syncs.
+# This is the entry point, it launches the TUI if no arguments are passed,
+# or an automatic runner if a configuration file is passed.
+# Arguments (for automatic runner only):
+#   -n | --dry-run: (optional) will pass this option to rclone
+#   filename: the path to a TOML file containing the task configuration
+#
+# Author: CarlesCN
+# E-mail: carlesbioinformatics@gmail.com
+# License: GNU General Public License v3.0
+###############################################################################
+
+
+# -e script ends on error (exit != 0)
+# -u error if undefined variable
+# -o pipefail script ends if piped command fails
+set -euo pipefail
+
+
+# Set some paths and export variables
+RCLONETASKS_BIN_PATH="$(dirname "$(realpath "$0")")"
+RCLONETASKS_TASKS_PATH="$HOME/.config/rclone-tasks/tasks"
+RCLONETASKS_LOG_PATH="$HOME/.config/rclone-tasks/log"
+RCLONETASKS_LOCK_PATH="$HOME/.config/rclone-tasks/lock"
+RCLONETASKS_RCLONE_CONFIG_FILE="$HOME/.config/rclone/rclone.conf"
+
+export RCLONETASKS_BIN_PATH
+export RCLONETASKS_TASKS_PATH
+export RCLONETASKS_LOG_PATH
+export RCLONETASKS_LOCK_PATH
+export RCLONETASKS_RCLONE_CONFIG_FILE
+
+
+# If some arguments, launch runner. If no arguments, launch TUI
+if [ $# -gt 0 ]; then
+    /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-runner.sh $*"
+else
+    /usr/bin/env bash -c "$RCLONETASKS_BIN_PATH/rclone-tasks-tui.sh"
+fi

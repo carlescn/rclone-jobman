@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-###################################################################
-# Library Name : rclone-jobman.sh
-# Description  : This library is part of rclone-jobman.
-#                It contains common functions.
-#                See main script for author, license and contact info.
-###################################################################
+###############################################################################
+# [rclone-tasks-tui-common.sh]
+# This library is part of rclone-tasks TUI.
+# It contains some common functions for drawing the TUI.
+# See main script for author, license and contact info.
+###############################################################################
 
 function exit_if_file_missing() {  # EXIT CODE 2
     if [[ ! -f "$1" ]]; then

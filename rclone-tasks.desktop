@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=rclone-tasks
+Comment=Rclone task manager
+Exec=rclone-tasks
+Icon=rclone.png
+Terminal=true
+Type=Application

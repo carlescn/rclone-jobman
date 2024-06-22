@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 
-###################################################################
-# Script Name : rclone-tasks-run.sh
-# Description : This script it's not intended to be run by itself,
-#               if should be called by rclone-jobman.
-#               This script runs a single task, taking the parameters from a file.
-# Args        : task_config_file: the path to a file containing the task description
-# Author      : CarlesCN
-# E-mail      : carlesbioinformatics@gmail.com
-# License     : GNU General Public License v3.0
-###################################################################
+###############################################################################
+# [rclone-tasks-runner.sh]
+# This script is part of rclone-tasks.
+# It's not intended to be run by itself, it should be called by rclone-tasks.
+# It runs a single task without user input, taking the parameters from a file.
+# Arguments:
+#   -n | --dry-run: (optional) will pass this option to rclone
+#   filename: the path to a TOML file containing the task configuration
+#
+# Author: CarlesCN
+# E-mail: carlesbioinformatics@gmail.com
+# License: GNU General Public License v3.0
+###############################################################################
 
 # -e script ends on error (exit != 0)
 # -u error if undefined variable
