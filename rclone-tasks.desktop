@@ -2,6 +2,6 @@
 Name=rclone-tasks
 Comment=Rclone task manager
 Exec=rclone-tasks
-Icon=rclone.png
+Icon=rclone
 Terminal=true
 Type=Application
